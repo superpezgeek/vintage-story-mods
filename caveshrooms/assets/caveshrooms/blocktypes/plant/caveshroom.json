@@ -91,6 +91,6 @@
   },
   "creativeinventory": {
     "general": [ "*" ],
-    "plants": [ "*" ]
+    "caveshrooms": [ "*" ]
   }
 }

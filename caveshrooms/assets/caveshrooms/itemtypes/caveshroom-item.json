@@ -46,6 +46,6 @@
   ],
   "creativeinventory": {
     "general": [ "*" ],
-    "food": [ "*" ]
+    "flora": [ "*" ]
   }
 }
