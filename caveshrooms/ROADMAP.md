@@ -41,17 +41,21 @@ matters if either of these doesn't actually work.
 
 ### Effects — glow
 
-Reintroduced in v0.1.5, hue `85` (confirmed true green) across all three
-states, brightness scaling with growth stage:
+Recolored in v0.1.13 to match the vanilla Temporal Gear's own light
+value exactly (`hue: 32, sat: ≤7`, the real 0-63/0-7 scale `lightHsv`
+actually uses — see `NOTES.local.md` for the debugging saga), brightness
+scaling with growth stage:
 
 - [x] Substrate: faint glow (`v: 3`).
 - [x] Flowering: slightly stronger glow (`v: 7`).
 - [x] Ripe: stronger glow, "almost torch level" (`v: 12`, vs. vanilla
       torch's `v: 14`).
 
-Confirmed working — spawns were spottable underground using it. Exact
-color/intensity feel hasn't been explicitly reviewed/tuned yet; revisit
-if it doesn't feel right in practice.
+Confirmed working and correctly teal/cyan-colored — verified underground
+at a natural spawn in full dark and above ground surrounded by chalk
+stone. Textures (`caveshroom-slime`/`saddle`/`jim`) were also recolored
+in this pass to the same temporal-gear teal-green family so the block's
+lit and unlit appearance match.
 
 ### Items — Caveshroom effects
 
