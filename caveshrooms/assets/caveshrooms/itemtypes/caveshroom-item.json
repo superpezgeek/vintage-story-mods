@@ -1,7 +1,6 @@
 {
   "code": "caveshroom-item",
   "shape": { "base": "item/caveshroom-item" },
-  "texture": { "base": "item/caveshroom-item" },
   "maxstacksize": 32,
   "nutritionPropsPerType": {
     "*": {
