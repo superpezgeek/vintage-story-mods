@@ -1,0 +1,27 @@
+{
+  "code": "caveshroom-item",
+  "shape": { "base": "item/caveshroom-item" },
+  "texture": { "base": "item/caveshroom-item" },
+  "maxstacksize": 32,
+  "nutritionPropsPerType": {
+    "*": {
+      "satiety": 80,
+      "foodcategory": "Vegetable",
+      "health": 0
+    }
+  },
+  "transitionablePropsPerType": {
+    "*": [
+      {
+        "type": "Perish",
+        "freshHours": { "avg": 96 },
+        "transitionHours": { "avg": 24 },
+        "transitionedStack": { "type": "item", "code": "game:rot" }
+      }
+    ]
+  },
+  "creativeinventory": {
+    "general": [ "*" ],
+    "food": [ "*" ]
+  }
+}

@@ -1,0 +1,112 @@
+{
+	"editor": {
+		"allAngles": false,
+		"entityTextureMode": false
+	},
+	"textureWidth": 32,
+	"textureHeight": 32,
+	"textures": {
+		"saddle": "block/plant/caveshroom-saddle",
+		"stem": "block/plant/caveshroom-saddle-stem",
+		"slime": "block/plant/caveshroom-slime"
+	},
+	"elements": [
+		{
+			"name": "mainpool",
+			"from": [ 2.5, 0.0, 2.5 ],
+			"to": [ 13.5, 0.6, 13.5 ],
+			"rotationOrigin": [ 8.0, 0.0, 8.0 ],
+			"faces": {
+				"north": { "texture": "#slime", "uv": [ 0.0, 0.0, 32.0, 2.4 ] },
+				"east": { "texture": "#slime", "uv": [ 0.0, 0.0, 32.0, 2.4 ] },
+				"south": { "texture": "#slime", "uv": [ 0.0, 0.0, 32.0, 2.4 ] },
+				"west": { "texture": "#slime", "uv": [ 0.0, 0.0, 32.0, 2.4 ] },
+				"up": { "texture": "#slime", "uv": [ 0.0, 0.0, 32.0, 32.0 ] }
+			}
+		},
+		{
+			"name": "mound1",
+			"from": [ 1.0, 0.0, 6.5 ],
+			"to": [ 6.0, 0.9, 11.5 ],
+			"rotationOrigin": [ 8.0, 0.0, 8.0 ],
+			"faces": {
+				"north": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 3.6 ] },
+				"east": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 3.6 ] },
+				"south": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 3.6 ] },
+				"west": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 3.6 ] },
+				"up": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 20.0 ] }
+			}
+		},
+		{
+			"name": "mound2",
+			"from": [ 9.5, 0.0, 1.5 ],
+			"to": [ 14.5, 0.5, 7.0 ],
+			"rotationOrigin": [ 8.0, 0.0, 8.0 ],
+			"faces": {
+				"north": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.0 ] },
+				"east": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.0 ] },
+				"south": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.0 ] },
+				"west": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.0 ] },
+				"up": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 20.0 ] }
+			}
+		},
+		{
+			"name": "mound3",
+			"from": [ 6.5, 0.0, 10.5 ],
+			"to": [ 11.5, 0.55, 15.0 ],
+			"rotationOrigin": [ 8.0, 0.0, 8.0 ],
+			"faces": {
+				"north": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.2 ] },
+				"east": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.2 ] },
+				"south": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.2 ] },
+				"west": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.2 ] },
+				"up": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 20.0 ] }
+			}
+		},
+		{
+			"name": "stem",
+			"from": [ 6.8, 0.0, 6.8 ],
+			"to": [ 9.2, 1.5, 9.2 ],
+			"rotationOrigin": [ 8.0, 0.0, 8.0 ],
+			"faces": {
+				"north": { "texture": "#stem", "uv": [ 0.0, 0.0, 9.6, 6.0 ] },
+				"east": { "texture": "#stem", "uv": [ 0.0, 0.0, 9.6, 6.0 ] },
+				"south": { "texture": "#stem", "uv": [ 0.0, 0.0, 9.6, 6.0 ] },
+				"west": { "texture": "#stem", "uv": [ 0.0, 0.0, 9.6, 6.0 ] },
+				"down": { "texture": "#stem", "uv": [ 0.0, 0.0, 9.6, 9.6 ] }
+			}
+		},
+		{
+			"name": "lobe1",
+			"from": [ 5.8, 1.3, 6.3 ],
+			"to": [ 9.3, 3.2, 9.3 ],
+			"rotationOrigin": [ 8.0, 1.3, 8.0 ],
+			"rotationX": -14,
+			"rotationZ": 9,
+			"faces": {
+				"north": { "texture": "#saddle", "uv": [ 0.0, 0.0, 14.0, 7.6 ] },
+				"east": { "texture": "#saddle", "uv": [ 0.0, 0.0, 12.0, 7.6 ] },
+				"south": { "texture": "#saddle", "uv": [ 0.0, 0.0, 14.0, 7.6 ] },
+				"west": { "texture": "#saddle", "uv": [ 0.0, 0.0, 12.0, 7.6 ] },
+				"up": { "texture": "#saddle", "uv": [ 0.0, 0.0, 14.0, 12.0 ] },
+				"down": { "texture": "#saddle", "uv": [ 0.0, 0.0, 14.0, 12.0 ] }
+			}
+		},
+		{
+			"name": "lobe2",
+			"from": [ 7.8, 2.0, 7.5 ],
+			"to": [ 10.5, 3.6, 10.8 ],
+			"rotationOrigin": [ 8.0, 2.0, 8.0 ],
+			"rotationX": 11,
+			"rotationZ": -15,
+			"faces": {
+				"north": { "texture": "#saddle", "uv": [ 0.0, 0.0, 13.2, 6.4 ] },
+				"east": { "texture": "#saddle", "uv": [ 0.0, 0.0, 13.2, 6.4 ] },
+				"south": { "texture": "#saddle", "uv": [ 0.0, 0.0, 13.2, 6.4 ] },
+				"west": { "texture": "#saddle", "uv": [ 0.0, 0.0, 13.2, 6.4 ] },
+				"up": { "texture": "#saddle", "uv": [ 0.0, 0.0, 13.2, 13.2 ] },
+				"down": { "texture": "#saddle", "uv": [ 0.0, 0.0, 13.2, 13.2 ] }
+			}
+		}
+	]
+}

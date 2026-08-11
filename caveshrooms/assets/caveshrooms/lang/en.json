@@ -1,0 +1,8 @@
+{
+  "block-caveshroom-empty": "Unstable Substrate",
+  "block-caveshroom-flowering": "Caveshroom Saddle",
+  "block-caveshroom-ripe": "Caveshroom",
+  "item-caveshroom-item": "Caveshroom",
+  "caveshrooms:caveshroom-desc": "A mushroom that fruits from patches of temporally unstable substrate deep in caves.",
+  "caveshrooms:caveshroom-empty-desc": "A slimy mat of unstable matter, thick with residual temporal instability. Mushrooms fruit from it given time. Can be dug up and relocated."
+}
