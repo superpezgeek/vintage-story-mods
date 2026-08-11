@@ -19,8 +19,29 @@
     "*-empty": { "x1": 0.05, "y1": 0, "z1": 0.05, "x2": 0.95, "y2": 0.2, "z2": 0.95 },
     "*": { "x1": 0.05, "y1": 0, "z1": 0.05, "x2": 0.95, "y2": 0.3, "z2": 0.95 }
   },
-  "attributes": {
-    "forageStatAffected": true
+  "attributesByType": {
+    "*-empty": {
+      "forageStatAffected": true,
+      "handbook": {
+        "extraSections": [
+          {
+            "title": "caveshrooms:block-handbooktitle-caveshroom-empty",
+            "text": "caveshrooms:block-handbooktext-caveshroom-empty"
+          }
+        ]
+      }
+    },
+    "*": {
+      "forageStatAffected": true,
+      "handbook": {
+        "extraSections": [
+          {
+            "title": "caveshrooms:block-handbooktitle-caveshroom",
+            "text": "caveshrooms:block-handbooktext-caveshroom"
+          }
+        ]
+      }
+    }
   },
   "variantgroups": [
     {
