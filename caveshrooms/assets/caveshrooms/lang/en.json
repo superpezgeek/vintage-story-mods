@@ -3,6 +3,11 @@
   "block-caveshroom-flowering": "Caveshroom Saddle",
   "block-caveshroom-ripe": "Caveshroom",
   "item-caveshroom-item": "Caveshroom",
+  "game:tabname-caveshrooms": "Caveshrooms",
   "caveshrooms:caveshroom-desc": "A mushroom that fruits from patches of temporally unstable substrate deep in caves.",
-  "caveshrooms:caveshroom-empty-desc": "A slimy mat of unstable matter, thick with residual temporal instability. Mushrooms fruit from it given time. Can be dug up and relocated."
+  "caveshrooms:caveshroom-empty-desc": "A slimy mat of unstable matter, thick with residual temporal instability. Mushrooms fruit from it given time. Can be dug up and relocated.",
+  "pie-single-caveshrooms:caveshroom-item-raw": "Caveshroom pie (raw)",
+  "pie-single-caveshrooms:caveshroom-item-partbaked": "Caveshroom pie (part-baked)",
+  "pie-single-caveshrooms:caveshroom-item-perfect": "Caveshroom pie",
+  "pie-single-caveshrooms:caveshroom-item-charred": "Caveshroom pie (charred)"
 }
