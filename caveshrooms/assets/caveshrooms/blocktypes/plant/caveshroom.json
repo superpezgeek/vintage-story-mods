@@ -1,0 +1,96 @@
+{
+  "code": "caveshroom",
+  "class": "BlockRequireSolidGround",
+  "entityClass": "BerryBush",
+  "blockmaterial": "Plant",
+  "blockmaterialByType": {
+    "*-empty": "Soil"
+  },
+  "replaceable": 5000,
+  "walkspeedmultiplier": 1.0,
+  "sidesolid": {
+    "all": false
+  },
+  "sideopaque": {
+    "all": false
+  },
+  "collisionbox": null,
+  "selectionboxByType": {
+    "*-empty": { "x1": 0.05, "y1": 0, "z1": 0.05, "x2": 0.95, "y2": 0.2, "z2": 0.95 },
+    "*": { "x1": 0.05, "y1": 0, "z1": 0.05, "x2": 0.95, "y2": 0.3, "z2": 0.95 }
+  },
+  "attributes": {
+    "forageStatAffected": true
+  },
+  "variantgroups": [
+    {
+      "code": "state",
+      "states": [ "empty", "flowering", "ripe" ]
+    }
+  ],
+  "behaviorsByType": {
+    "*-ripe": [
+      {
+        "name": "Harvestable",
+        "properties": {
+          "harvestTime": 1.5,
+          "harvestedStack": {
+            "type": "item",
+            "code": "caveshrooms:caveshroom-item",
+            "quantity": { "avg": 2, "var": 1 }
+          },
+          "harvestedBlockCode": "caveshrooms:caveshroom-empty",
+          "exchangeBlock": true
+        }
+      }
+    ]
+  },
+  "shapeByType": {
+    "*-empty": { "base": "block/plant/caveshroom-empty" },
+    "*-flowering": { "base": "block/plant/caveshroom-flowering" },
+    "*-ripe": { "base": "block/plant/caveshroom-ripe" }
+  },
+  "lightHsvByType": {
+    "*-empty": [ 85, 120, 3 ],
+    "*-flowering": [ 85, 160, 7 ],
+    "*-ripe": [ 85, 200, 12 ]
+  },
+  "lightAbsorption": 0,
+  "drawtype": "JSON",
+  "combustibleProps": {
+    "burnTemperature": 600,
+    "burnDuration": 20
+  },
+  "dropsByType": {
+    "*-empty": [
+      {
+        "type": "block",
+        "code": "caveshrooms:caveshroom-empty",
+        "quantity": { "avg": 1 }
+      }
+    ],
+    "*-flowering": [
+      {
+        "type": "block",
+        "code": "caveshrooms:caveshroom-empty",
+        "quantity": { "avg": 1 }
+      }
+    ],
+    "*-ripe": [
+      {
+        "type": "item",
+        "code": "caveshrooms:caveshroom-item",
+        "quantity": { "avg": 2, "var": 1 }
+      }
+    ],
+    "*": []
+  },
+  "sounds": {
+    "break": "game:block/plant",
+    "walk": "game:walk/plant"
+  },
+  "creativeinventory": {
+    "general": [ "*" ],
+    "plants": [ "*" ]
+  }
+}

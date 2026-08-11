@@ -1,0 +1,13 @@
+[
+  {
+    "comment": "Bioluminescent caveshrooms growing in dark cave interiors",
+    "blockCodes": [ "caveshrooms:caveshroom-ripe" ],
+    "quantity": {
+      "avg": 2,
+      "var": 1
+    },
+    "chance": 12,
+    "placement": "Underground",
+    "maxY": 0.35
+  }
+]

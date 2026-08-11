@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -NoProfile -Command 'Get-ItemProperty HKLM:\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall\\\\*, HKLM:\\\\Software\\\\Wow6432Node\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall\\\\* -ErrorAction SilentlyContinue | Select-Object DisplayName | Where-Object { $_.DisplayName -match '\\\\''Aseprite|GIMP|Krita|Paint.NET|Photoshop|Piskel'\\\\'' }')",
+      "Bash(magick -version)",
+      "Bash(py -3 -c \"import PIL; print\\('PIL', PIL.__version__\\)\")",
+      "Bash(py -3 --version)",
+      "Bash(py -3 -m pip --version)",
+      "Bash(py -3 -c \"import PIL; print\\('Pillow', PIL.__version__\\)\")",
+      "Bash(py -3 -c ' *)",
+      "Bash(mkdir -p \"/c/Users/DJRic/AppData/Local/Temp/claude/c--Users-DJRic-Documents-code-vintage-story-mods/f649e72d-bbd0-4dca-8394-3f328990614f/scratchpad/ref\")"
+    ]
+  }
+}

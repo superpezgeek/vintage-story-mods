@@ -1,0 +1,78 @@
+{
+	"editor": {
+		"allAngles": false,
+		"entityTextureMode": false
+	},
+	"textureWidth": 32,
+	"textureHeight": 32,
+	"textures": {
+		"slime": "block/plant/caveshroom-slime"
+	},
+	"elements": [
+		{
+			"name": "mainpool",
+			"from": [ 2.5, 0.0, 2.5 ],
+			"to": [ 13.5, 0.6, 13.5 ],
+			"rotationOrigin": [ 8.0, 0.0, 8.0 ],
+			"faces": {
+				"north": { "texture": "#slime", "uv": [ 0.0, 0.0, 32.0, 2.4 ] },
+				"east": { "texture": "#slime", "uv": [ 0.0, 0.0, 32.0, 2.4 ] },
+				"south": { "texture": "#slime", "uv": [ 0.0, 0.0, 32.0, 2.4 ] },
+				"west": { "texture": "#slime", "uv": [ 0.0, 0.0, 32.0, 2.4 ] },
+				"up": { "texture": "#slime", "uv": [ 0.0, 0.0, 32.0, 32.0 ] }
+			}
+		},
+		{
+			"name": "mound1",
+			"from": [ 1.0, 0.0, 6.5 ],
+			"to": [ 6.0, 0.9, 11.5 ],
+			"rotationOrigin": [ 8.0, 0.0, 8.0 ],
+			"faces": {
+				"north": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 3.6 ] },
+				"east": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 3.6 ] },
+				"south": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 3.6 ] },
+				"west": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 3.6 ] },
+				"up": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 20.0 ] }
+			}
+		},
+		{
+			"name": "mound2",
+			"from": [ 9.5, 0.0, 1.5 ],
+			"to": [ 14.5, 0.5, 7.0 ],
+			"rotationOrigin": [ 8.0, 0.0, 8.0 ],
+			"faces": {
+				"north": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.0 ] },
+				"east": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.0 ] },
+				"south": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.0 ] },
+				"west": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.0 ] },
+				"up": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 20.0 ] }
+			}
+		},
+		{
+			"name": "mound3",
+			"from": [ 6.5, 0.0, 10.5 ],
+			"to": [ 11.5, 0.55, 15.0 ],
+			"rotationOrigin": [ 8.0, 0.0, 8.0 ],
+			"faces": {
+				"north": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.2 ] },
+				"east": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.2 ] },
+				"south": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.2 ] },
+				"west": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 2.2 ] },
+				"up": { "texture": "#slime", "uv": [ 0.0, 0.0, 20.0, 20.0 ] }
+			}
+		},
+		{
+			"name": "bubble",
+			"from": [ 7.0, 0.5, 7.0 ],
+			"to": [ 9.5, 1.2, 9.5 ],
+			"rotationOrigin": [ 8.0, 0.0, 8.0 ],
+			"faces": {
+				"north": { "texture": "#slime", "uv": [ 0.0, 0.0, 10.0, 2.8 ] },
+				"east": { "texture": "#slime", "uv": [ 0.0, 0.0, 10.0, 2.8 ] },
+				"south": { "texture": "#slime", "uv": [ 0.0, 0.0, 10.0, 2.8 ] },
+				"west": { "texture": "#slime", "uv": [ 0.0, 0.0, 10.0, 2.8 ] },
+				"up": { "texture": "#slime", "uv": [ 0.0, 0.0, 10.0, 10.0 ] }
+			}
+		}
+	]
+}
