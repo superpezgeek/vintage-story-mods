@@ -2,23 +2,36 @@
   "code": "caveshroom-item",
   "shape": { "base": "item/caveshroom-item" },
   "maxstacksize": 32,
-  "nutritionPropsPerType": {
-    "*": {
-      "satiety": 80,
-      "foodcategory": "Vegetable",
-      "health": 0
+  "lightHsv": [ 32, 7, 6 ],
+  "guiTransform": {
+    "rotation": { "x": 158, "y": 107, "z": 0 },
+    "origin": { "x": 0.5, "y": 0.2, "z": 0.5 },
+    "scale": 3.6
+  },
+  "tpHandTransform": {
+    "translation": { "x": -0.93, "y": -0.17, "z": -0.8 },
+    "rotation": { "x": 195, "y": -10, "z": -114 },
+    "origin": { "x": 0.5, "y": 0.1, "z": 0.5 },
+    "scale": 0.7
+  },
+  "groundTransform": {
+    "origin": { "x": 0.5, "y": 0, "z": 0.5 },
+    "scale": 6
+  },
+  "nutritionProps": {
+    "satiety": 80,
+    "foodcategory": "Vegetable",
+    "health": -1,
+    "psychedelic": 0.8
+  },
+  "transitionableProps": [
+    {
+      "type": "Perish",
+      "freshHours": { "avg": 96 },
+      "transitionHours": { "avg": 24 },
+      "transitionedStack": { "type": "item", "code": "survival:rot" }
     }
-  },
-  "transitionablePropsPerType": {
-    "*": [
-      {
-        "type": "Perish",
-        "freshHours": { "avg": 96 },
-        "transitionHours": { "avg": 24 },
-        "transitionedStack": { "type": "item", "code": "game:rot" }
-      }
-    ]
-  },
+  ],
   "creativeinventory": {
     "general": [ "*" ],
     "food": [ "*" ]
