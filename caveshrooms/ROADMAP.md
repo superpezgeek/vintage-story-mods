@@ -86,6 +86,15 @@ restructuring anything we've already built.
       **Needs C# code mod** (see above).
 - [ ] Eating a Caveshroom makes the player glow, cumulatively with
       repeated eating. **Needs C# code mod** (see above).
+- [ ] A pie containing caveshroom filling glows. **Needs C# code mod**:
+      `pie.json` is a single blocktype where fillings are stored as
+      freeform block-entity data (`ucontents`), not a variant — there's
+      no `lightHsvByType` key to hang a filling-specific glow off of.
+      The hook that would make this possible:
+      `CollectibleObject.GetLightHsv(blockAccessor, pos, stack)`, which
+      exists precisely for computed-at-render-time light values — read
+      the pie's `ucontents` off its block entity, check for a caveshroom
+      filling, return HSV accordingly.
 
 ### Items — Alchemy mod compatibility
 
