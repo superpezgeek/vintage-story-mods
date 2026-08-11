@@ -18,6 +18,16 @@
     "origin": { "x": 0.5, "y": 0, "z": 0.5 },
     "scale": 6
   },
+  "attributes": {
+    "handbook": {
+      "extraSections": [
+        {
+          "title": "caveshrooms:item-handbooktitle-caveshroom-item",
+          "text": "caveshrooms:item-handbooktext-caveshroom-item"
+        }
+      ]
+    }
+  },
   "nutritionProps": {
     "satiety": 80,
     "foodcategory": "Vegetable",
