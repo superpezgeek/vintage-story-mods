@@ -59,19 +59,33 @@ lit and unlit appearance match.
 
 ### Items — Caveshroom effects
 
-- [ ] Caveshroom item is poisonous — lowers the eating player's temporal
-      stability. **Research risk**: haven't confirmed a vanilla food item
-      does anything like this via plain JSON (health-on-eat is standard;
-      a temporal-stability-specific effect from food is not something
-      we've seen a precedent for yet). Needs investigation before
-      committing to a JSON-only approach.
-- [ ] Eating a Caveshroom makes the player glow, and the effect stacks
-      cumulatively with repeated eating. **Research risk**: this smells
-      like a status-effect/buff system, which is the same category of
-      problem as the knife-harvest-speed request that turned out to need
-      custom C# (no JSON property found for it). Investigate whether VS
-      exposes a player light-emission buff via data-driven config before
-      assuming this is achievable without writing a mod DLL.
+- [x] Caveshroom item is poisonous and psychedelic — `nutritionProps`
+      set to `health: -1, psychedelic: 0.8`, the same JSON fields vanilla
+      uses for its own hallucinogenic mushrooms (e.g. Laughing Jim itself
+      is `health: -10, psychedelic: 0.6`). A plain JSON-achievable stand-in
+      for the original "lowers temporal stability" idea, not the same
+      effect — see below.
+
+Two effects from the original spec are confirmed to require a real code
+mod — no JSON-only path exists for either. Checked: no vanilla food item
+modifies temporal stability via JSON anywhere; `VintagestoryAPI.xml` (the
+public modding API doc) has zero references to "Stability" at all,
+meaning the mechanic is internal to `VSSurvivalMod.dll`, not exposed as
+data-driven config; and player light emission isn't one of the fixed
+keys the engine's generic `statModifiers`/`statModifiersByType` system
+supports (`walkSpeed`, `hungerrate`, `healingeffectivness`,
+`rangedWeaponsAcc`/`Speed`, etc. — a closed set, not extensible via JSON
+to new stats). Path forward: flip `modinfo.json` from `"type": "content"`
+to `"type": "code"` and add a compiled C# behavior — per `EnumModType`'s
+own doc comment, `Code` is a strict superset of `Content` (can still do
+everything the JSON/assets side already does), so this doesn't require
+restructuring anything we've already built.
+
+- [ ] Eating a Caveshroom specifically lowers the eating player's
+      temporal stability (distinct from generic health damage).
+      **Needs C# code mod** (see above).
+- [ ] Eating a Caveshroom makes the player glow, cumulatively with
+      repeated eating. **Needs C# code mod** (see above).
 
 ### Items — Alchemy mod compatibility
 
