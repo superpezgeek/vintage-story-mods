@@ -4,7 +4,9 @@
   "entityClass": "BerryBush",
   "blockmaterial": "Plant",
   "blockmaterialByType": {
-    "*-empty": "Soil"
+    "*-empty": "Soil",
+    "*-flowering": "Soil",
+    "*-ripe": "Soil"
   },
   "replaceable": 5000,
   "walkspeedmultiplier": 1.0,
@@ -58,7 +60,7 @@
           "harvestedStack": {
             "type": "item",
             "code": "caveshrooms:caveshroom-item",
-            "quantity": { "avg": 2, "var": 1 }
+            "quantity": { "avg": 2.5, "var": 0.5 }
           },
           "harvestedBlockCode": "caveshrooms:caveshroom-empty",
           "exchangeBlock": true
@@ -101,7 +103,12 @@
       {
         "type": "item",
         "code": "caveshrooms:caveshroom-item",
-        "quantity": { "avg": 2, "var": 1 }
+        "quantity": { "avg": 2.5, "var": 0.5 }
+      },
+      {
+        "type": "block",
+        "code": "caveshrooms:caveshroom-empty",
+        "quantity": { "avg": 1 }
       }
     ],
     "*": []
