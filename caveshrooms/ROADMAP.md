@@ -86,15 +86,15 @@ restructuring anything we've already built.
       **Needs C# code mod** (see above).
 - [ ] Eating a Caveshroom makes the player glow, cumulatively with
       repeated eating. **Needs C# code mod** (see above).
-- [ ] A pie containing caveshroom filling glows. **Needs C# code mod**:
-      `pie.json` is a single blocktype where fillings are stored as
-      freeform block-entity data (`ucontents`), not a variant — there's
-      no `lightHsvByType` key to hang a filling-specific glow off of.
-      The hook that would make this possible:
-      `CollectibleObject.GetLightHsv(blockAccessor, pos, stack)`, which
-      exists precisely for computed-at-render-time light values — read
-      the pie's `ucontents` off its block entity, check for a caveshroom
-      filling, return HSV accordingly.
+
+Pie support (filling + glow) was implemented then deliberately removed —
+caveshroom was the only mushroom species that could go in a pie at all,
+and it didn't feel worth pressing given the Alchemy ingredient use case
+already covers "what is this mushroom good for." Easy to revisit later:
+the removed pieces were `inPieProperties`/`nutritionPropsWhenInMeal` in
+`caveshroom-item.json`'s `attributes`, four `pie-single-*` lang keys, and
+a `fill-caveshroom.png` texture (recolored from vanilla's unused
+`fill-mushroomblue.png` — see `NOTES.local.md`).
 
 ### Items — Alchemy mod compatibility
 

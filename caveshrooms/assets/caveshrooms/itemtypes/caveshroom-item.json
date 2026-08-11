@@ -24,18 +24,6 @@
     "health": -1,
     "psychedelic": 0.8
   },
-  "attributes": {
-    "foodTags": [ "caveshroom" ],
-    "inPieProperties": {
-      "texture": "block/food/pie/fill-caveshroom",
-      "partType": "Filling",
-      "mixingCodes": [ "potpie" ]
-    },
-    "nutritionPropsWhenInMeal": {
-      "satiety": 150,
-      "foodcategory": "Vegetable"
-    }
-  },
   "transitionableProps": [
     {
       "type": "Perish",
