@@ -1,0 +1,3 @@
+[
+  { "file": "caveshrooms:recipes/grid/potionbase-basic-caveshroom.json", "op": "addmerge", "path": "/0/enabled", "value": false, "side": "server", "dependsOn": [{ "modid": "alchemy", "invert": true }] }
+]

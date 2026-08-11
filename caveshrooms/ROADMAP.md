@@ -101,24 +101,30 @@ restructuring anything we've already built.
 Reference: <https://mods.vintagestory.at/alchemy> (adds herb/potion
 crafting; mushrooms can be ground into "basic potion base").
 
-- [ ] Make `caveshroom-item` usable as an Alchemy ingredient.
-      **Not yet investigated in depth** — initial research found:
-  - Alchemy ships dedicated compatibility patches for specific mods
-    (e.g. "Mycodiversity", "Material Needs: Flowers") rather than a
-    generic tag/attribute any mushroom can opt into. No documented
-    plugin/tagging architecture for third-party items.
-  - Likely path: **we** ship a `jsonpatches` file inside Caveshrooms that
-    targets Alchemy's own recipe/ingredient JSON (standard VS cross-mod
-    patch mechanism, via an optional/soft dependency on the `alchemy`
-    modid) — same effect as Alchemy's own Mycodiversity compat, just
-    authored on our side instead of theirs.
-  - Still need: the exact JSON file/path inside Alchemy that lists valid
-    "basic potion base" ingredients, so we know what to patch. Not yet
-    located — requires pulling the actual Alchemy mod files (from
-    `github.com/Llama3013/vsmod-Alchemy` or the installed mod zip) and
-    reading the real recipe JSON, not just the mod page description.
-  - Fallback if no clean patch point exists: reach out to the Alchemy
-    author for a native compat entry, same as Mycodiversity got.
+- [x] Make `caveshroom-item` usable to craft Alchemy's basic potion base.
+      Confirmed there's no generic tag/attribute system — Alchemy's own
+      compat for other mods (Mycodiversity, Material Needs: Flowers) works
+      by shipping real grid recipes plus a jsonpatch that disables them
+      when the target mod is absent (checked their actual unpacked mod
+      files, e.g. `recipes/grid/ingredient/compatibility/
+      mycodiversity-basicbase.json` + `patches/compatibility/
+      mycodiversity-compat.json`). Mirrored that pattern from our own
+      side instead of patching theirs:
+  - `assets/caveshrooms/recipes/grid/potionbase-basic-caveshroom.json` —
+    a new grid recipe: `caveshroom-item` + `game:flower-horsetail-free` +
+    `alchemy:mortarpestle-*` → `alchemy:potionbase-basic`, matching the
+    exact ingredient pattern Alchemy uses for every other compatible
+    mushroom.
+  - `assets/caveshrooms/patches/compatibility/alchemy-potionbase.json` —
+    a jsonpatch that disables that recipe (`enabled: false`) specifically
+    when the `alchemy` modid is *not* present, so Caveshrooms doesn't
+    hard-depend on Alchemy and stays fully standalone without it.
+  - Not added to `modinfo.json` `dependencies` — that field only supports
+    hard/required dependencies (confirmed via `ModDependency` in the API
+    doc, no optional-dependency concept exists there); the jsonpatch
+    `dependsOn` condition is the actual mechanism for "only if present."
+  - **Not yet verified in-game** — needs a real test once Alchemy's
+    mortar & pestle + horsetail are in hand.
 
 ## 1.5
 
