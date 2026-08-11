@@ -2,11 +2,10 @@
   "type": "content",
   "modid": "caveshrooms",
   "name": "Caveshrooms",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "Adds a mushroom that fruits from patches of temporally unstable substrate deep in caves.",
   "authors": [ "superpezgeek" ],
   "dependencies": {
-    "game": "1.22.6",
-    "survival": "1.22.6"
+    "game": "1.22.6"
   }
 }
