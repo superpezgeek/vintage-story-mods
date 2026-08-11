@@ -51,9 +51,9 @@
     "*-ripe": { "base": "block/plant/caveshroom-ripe" }
   },
   "lightHsvByType": {
-    "*-empty": [ 85, 120, 3 ],
-    "*-flowering": [ 85, 160, 7 ],
-    "*-ripe": [ 85, 200, 12 ]
+    "*-empty": [ 115, 180, 3 ],
+    "*-flowering": [ 115, 220, 7 ],
+    "*-ripe": [ 115, 255, 12 ]
   },
   "lightAbsorption": 0,
   "drawtype": "JSON",
