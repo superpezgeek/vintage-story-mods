@@ -28,16 +28,17 @@ matters if either of these doesn't actually work.
 - [x] Empty (Unstable Substrate): breaks (not right-click) to drop itself;
       shovel-faster via `blockmaterialByType: {"*-empty": "Soil"}`.
 - [x] Flowering: breaking drops substrate.
-- [ ] Flowering: shovel-faster. Needs `blockmaterialByType` entry (currently
-      only `*-empty` is set to `"Soil"`; flowering still falls back to
-      `"Plant"`, so no shovel bonus).
-- [ ] Ripe: tune harvest quantity to a strict 2–3 range (currently
-      `avg: 2, var: 1`, which allows 1 or 4 at the edges).
-- [ ] Ripe: breaking (not harvesting) should drop **both** the mushrooms
-      and the substrate block. Currently `dropsByType` for `*-ripe` only
-      has the mushroom item.
-- [ ] Ripe: shovel-faster when broken. Same `blockmaterialByType` gap as
-      flowering.
+- [x] Flowering: shovel-faster. Added `"*-flowering": "Soil"` to
+      `blockmaterialByType`.
+- [x] Ripe: tune harvest quantity to a strict 2–3 range. Changed both
+      `harvestedStack` and the `*-ripe` `dropsByType` entry to
+      `avg: 2.5, var: 0.5` (was `avg: 2, var: 1`, which allowed 1 or 4 at
+      the edges).
+- [x] Ripe: breaking (not harvesting) now drops **both** the mushroom
+      item and the substrate block — added a second `dropsByType`
+      entry for `*-ripe`.
+- [x] Ripe: shovel-faster when broken. Added `"*-ripe": "Soil"` to
+      `blockmaterialByType`.
 
 ### Effects — glow
 
@@ -123,8 +124,8 @@ crafting; mushrooms can be ground into "basic potion base").
     hard/required dependencies (confirmed via `ModDependency` in the API
     doc, no optional-dependency concept exists there); the jsonpatch
     `dependsOn` condition is the actual mechanism for "only if present."
-  - **Not yet verified in-game** — needs a real test once Alchemy's
-    mortar & pestle + horsetail are in hand.
+  - **Confirmed working in-game** — successfully crafted a basic potion
+    base from a caveshroom.
 
 ## 1.5
 
