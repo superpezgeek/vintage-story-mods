@@ -1,0 +1,15 @@
+C:\Users\DJRic\Documents\code\vintage-story-mods\Caveshrooms\CaveshroomsCode\obj\Debug\CaveshroomsCode.csproj.AssemblyReference.cache
+C:\Users\DJRic\Documents\code\vintage-story-mods\Caveshrooms\CaveshroomsCode\obj\Debug\CaveshroomsCode.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\DJRic\Documents\code\vintage-story-mods\Caveshrooms\CaveshroomsCode\obj\Debug\CaveshroomsCode.AssemblyInfoInputs.cache
+C:\Users\DJRic\Documents\code\vintage-story-mods\Caveshrooms\CaveshroomsCode\obj\Debug\CaveshroomsCode.AssemblyInfo.cs
+C:\Users\DJRic\Documents\code\vintage-story-mods\Caveshrooms\CaveshroomsCode\obj\Debug\CaveshroomsCode.csproj.CoreCompileInputs.cache
+C:\Users\DJRic\Documents\code\vintage-story-mods\Caveshrooms\CaveshroomsCode\obj\Debug\CaveshroomsCode.sourcelink.json
+C:\Users\DJRic\Documents\code\vintage-story-mods\Caveshrooms\CaveshroomsCode\obj\Debug\Caveshrooms.dll
+C:\Users\DJRic\Documents\code\vintage-story-mods\Caveshrooms\CaveshroomsCode\obj\Debug\refint\Caveshrooms.dll
+C:\Users\DJRic\Documents\code\vintage-story-mods\Caveshrooms\CaveshroomsCode\obj\Debug\Caveshrooms.pdb
+C:\Users\DJRic\Documents\code\vintage-story-mods\Caveshrooms\Caveshrooms.deps.json
+C:\Users\DJRic\Documents\code\vintage-story-mods\Caveshrooms\CaveshroomsCode\obj\Debug\CaveshroomsCode.genruntimeconfig.cache
+C:\Users\DJRic\Documents\code\vintage-story-mods\Caveshrooms\Caveshrooms.runtimeconfig.json
+C:\Users\DJRic\Documents\code\vintage-story-mods\Caveshrooms\Caveshrooms.dll
+C:\Users\DJRic\Documents\code\vintage-story-mods\Caveshrooms\CaveshroomsCode\obj\Debug\ref\Caveshrooms.dll
+C:\Users\DJRic\Documents\code\vintage-story-mods\Caveshrooms\Caveshrooms.pdb

@@ -3,6 +3,9 @@
   "shape": { "base": "item/caveshroom-item" },
   "maxstacksize": 32,
   "lightHsv": [ 32, 7, 6 ],
+  "behaviors": [
+    { "name": "CaveshroomsTemporalEffect", "properties": { "stabilityLossPerPsychedelic": 0.05, "glowGainPerPsychedelic": 2.5, "maxGlow": 20 } }
+  ],
   "guiTransform": {
     "rotation": { "x": 158, "y": 107, "z": 0 },
     "origin": { "x": 0.5, "y": 0.2, "z": 0.5 },
