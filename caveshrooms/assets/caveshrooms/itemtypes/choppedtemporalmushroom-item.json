@@ -1,0 +1,86 @@
+{
+  "code": "choppedtemporalmushroom-item",
+  "shape": { "base": "item/food/choppedtemporalmushroom-item" },
+  "maxstacksize": 64,
+  "lightHsv": [ 32, 7, 6 ],
+  "behaviors": [
+    { "name": "GroundStorable", "properties": { "layout": "messy12", "collisionBox": { "x1": 0, "y1": 0, "z1": 0, "x2": 1, "y2": 0.125, "z2": 1 } } }
+  ],
+  "guiTransform": {
+    "translation": { "x": 3, "y": 3, "z": 0 },
+    "rotation": { "x": -61, "y": 18, "z": -175 },
+    "origin": { "x": 0.5, "y": 0.1, "z": 0.5 },
+    "scale": 2.75,
+    "rotate": true
+  },
+  "tpHandTransform": {
+    "translation": { "x": -1.25, "y": -0.3, "z": -1.1 },
+    "rotation": { "x": 91, "y": -35, "z": -92 },
+    "origin": { "x": 0.5, "y": 0.1, "z": 0.5 },
+    "scale": 0.5
+  },
+  "groundTransform": {
+    "translation": { "x": 0, "y": 0.02, "z": 0 },
+    "rotation": { "x": 0, "y": 0, "z": 0 },
+    "origin": { "x": 0.5, "y": 0, "z": 0.5 },
+    "scale": 3.5
+  },
+  "attributes": {
+    "displaycaseable": true,
+    "shelvable": true,
+    "foodTags": [ "temporalmushroom" ],
+    "handbook": {
+      "extraSections": [
+        {
+          "title": "caveshrooms:item-handbooktitle-choppedtemporalmushroom-item",
+          "text": "caveshrooms:item-handbooktext-choppedtemporalmushroom-item"
+        }
+      ]
+    },
+    "inPieProperties": {
+      "texture": "block/food/pie/fill-choppedtemporalmushroom",
+      "partType": "Filling",
+      "mixingCodes": [ "potpie" ]
+    },
+    "nutritionPropsWhenInMeal": {
+      "satiety": 150,
+      "foodcategory": "Vegetable",
+      "health": -1,
+      "psychedelic": 0.8
+    },
+    "bakingProperties": {
+      "temp": 120,
+      "levelFrom": 0.0,
+      "levelTo": 0.25,
+      "startScaleY": 1.0,
+      "endScaleY": 0.95,
+      "resultCode": "caveshrooms:cookedchoppedtemporalmushroom-item-partbaked"
+    }
+  },
+  "nutritionProps": {
+    "satiety": 80,
+    "foodcategory": "Vegetable",
+    "health": -1,
+    "psychedelic": 0.8
+  },
+  "combustibleProps": {
+    "meltingPoint": 150,
+    "meltingDuration": 20,
+    "smeltedRatio": 1,
+    "smeltingType": "bake",
+    "smeltedStack": { "type": "item", "code": "caveshrooms:cookedchoppedtemporalmushroom-item-charred" },
+    "requiresContainer": false
+  },
+  "transitionableProps": [
+    {
+      "type": "Perish",
+      "freshHours": { "avg": 96 },
+      "transitionHours": { "avg": 24 },
+      "transitionedStack": { "type": "item", "code": "game:rot" }
+    }
+  ],
+  "creativeinventory": {
+    "general": [ "*" ],
+    "flora": [ "*" ]
+  }
+}

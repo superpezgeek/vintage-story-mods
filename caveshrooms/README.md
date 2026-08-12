@@ -19,9 +19,12 @@ natural underground worldgen spawns, correct drops/tooling for all three
 states, teal/cyan glow scaling with growth stage (color-matched to the
 game's own Temporal Gear), the item being edible (poisonous + mildly
 psychedelic), full handbook entries including a dedicated "Game
-Mechanic: Caveshrooms" guide page, and crafting into Alchemy's basic
-potion base when that mod is installed (fully optional, no hard
-dependency).
+Mechanic: Caveshrooms" guide page, crafting into Alchemy's basic potion
+base when that mod is installed (fully optional, no hard dependency),
+and chopping/cooking/Temporal Pie support (knife and cleaver chopping,
+firepit/oven cooking through all three bake states in either order, and
+baking/eating a Temporal Pie — see `ROADMAP.md`'s "Chopping, cooking,
+and pie" section for the full design writeup).
 
 ## Folder structure
 
@@ -33,15 +36,21 @@ Caveshrooms/
 └── assets/caveshrooms/
     ├── blocktypes/plant/caveshroom.json       # the block: 3 growth states
     ├── itemtypes/caveshroom-item.json         # the harvested/edible item
+    ├── itemtypes/choppedtemporalmushroom-item.json          # chopped, raw
+    ├── itemtypes/cookedtemporalmushroom-item.json           # cooked, whole
+    ├── itemtypes/cookedchoppedtemporalmushroom-item.json    # cooked, chopped
     ├── worldgen/blockpatches/caveshrooms.json # underground cave spawn rules
     ├── lang/en.json                           # display names + handbook text
     ├── config/handbook/gamemechanicinfo-caveshrooms.json  # guide page
     ├── recipes/grid/potionbase-basic-caveshroom.json       # Alchemy recipe
+    ├── recipes/grid/choppedtemporalmushroom.json            # knife/cleaver chopping
+    ├── recipes/grid/cookedchoppedtemporalmushroom.json      # chop a cooked mushroom
     ├── patches/compatibility/alchemy-potionbase.json        # disables the
     │                                          # recipe above if Alchemy isn't installed
     ├── shapes/block/plant/caveshroom-{empty,flowering,ripe}.json
     ├── shapes/item/caveshroom-item.json
-    └── textures/{block/plant,item}/*.png      # procedurally generated, see below
+    ├── shapes/item/food/choppedtemporalmushroom-item.json   # diced chunks, new geometry
+    └── textures/{block/plant,item,block/food/pie}/*.png     # procedurally generated, see below
 ```
 
 ## Dev workflow — read before testing changes
