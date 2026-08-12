@@ -5,6 +5,9 @@
   "variantgroups": [
     { "code": "state", "states": [ "partbaked", "perfect", "charred" ] }
   ],
+  "behaviors": [
+    { "name": "CaveshroomsTemporalEffect", "properties": { "stabilityLossPerPsychedelic": 0.05, "glowGainPerPsychedelic": 2.5, "maxGlow": 20 } }
+  ],
   "texturesByType": {
     "*-partbaked": {
       "cap": { "base": "block/plant/caveshroom-jim-partbaked" },
