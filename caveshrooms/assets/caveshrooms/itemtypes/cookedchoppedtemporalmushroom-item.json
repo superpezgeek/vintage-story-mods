@@ -1,0 +1,128 @@
+{
+  "code": "cookedchoppedtemporalmushroom-item",
+  "shape": { "base": "item/food/choppedtemporalmushroom-item" },
+  "maxstacksize": 64,
+  "variantgroups": [
+    { "code": "state", "states": [ "partbaked", "perfect", "charred" ] }
+  ],
+  "behaviors": [
+    { "name": "GroundStorable", "properties": { "layout": "messy12", "collisionBox": { "x1": 0, "y1": 0, "z1": 0, "x2": 1, "y2": 0.125, "z2": 1 } } }
+  ],
+  "texturesByType": {
+    "*-partbaked": {
+      "cap": { "base": "block/plant/caveshroom-jim-partbaked" },
+      "gills": { "base": "block/plant/caveshroom-jim-gills-partbaked" }
+    },
+    "*-perfect": {
+      "cap": { "base": "block/plant/caveshroom-jim-perfect" },
+      "gills": { "base": "block/plant/caveshroom-jim-gills-perfect" }
+    },
+    "*-charred": {
+      "cap": { "base": "block/plant/caveshroom-jim-charred" },
+      "gills": { "base": "block/plant/caveshroom-jim-gills-charred" }
+    }
+  },
+  "guiTransform": {
+    "translation": { "x": 3, "y": 3, "z": 0 },
+    "rotation": { "x": -61, "y": 18, "z": -175 },
+    "origin": { "x": 0.5, "y": 0.1, "z": 0.5 },
+    "scale": 2.75,
+    "rotate": true
+  },
+  "tpHandTransform": {
+    "translation": { "x": -1.25, "y": -0.3, "z": -1.1 },
+    "rotation": { "x": 91, "y": -35, "z": -92 },
+    "origin": { "x": 0.5, "y": 0.1, "z": 0.5 },
+    "scale": 0.5
+  },
+  "groundTransform": {
+    "translation": { "x": 0, "y": 0.02, "z": 0 },
+    "rotation": { "x": 0, "y": 0, "z": 0 },
+    "origin": { "x": 0.5, "y": 0, "z": 0.5 },
+    "scale": 3.5
+  },
+  "attributes": {
+    "displaycaseable": true,
+    "shelvable": true,
+    "handbook": {
+      "groupBy": [ "cookedchoppedtemporalmushroom-item-*" ],
+      "extraSections": [
+        {
+          "title": "caveshrooms:item-handbooktitle-cookedchoppedtemporalmushroom-item",
+          "text": "caveshrooms:item-handbooktext-cookedchoppedtemporalmushroom-item"
+        }
+      ]
+    }
+  },
+  "attributesByType": {
+    "*-partbaked": {
+      "bakingProperties": {
+        "temp": 120,
+        "levelFrom": 0.25,
+        "levelTo": 0.5,
+        "startScaleY": 0.95,
+        "endScaleY": 0.88,
+        "resultCode": "caveshrooms:cookedchoppedtemporalmushroom-item-perfect",
+        "initialCode": "caveshrooms:choppedtemporalmushroom-item"
+      }
+    },
+    "*-perfect": {
+      "bakingProperties": {
+        "temp": 120,
+        "levelFrom": 0.5,
+        "levelTo": 0.75,
+        "startScaleY": 0.88,
+        "endScaleY": 0.8,
+        "resultCode": "caveshrooms:cookedchoppedtemporalmushroom-item-charred",
+        "initialCode": "caveshrooms:cookedchoppedtemporalmushroom-item-partbaked"
+      }
+    },
+    "*-charred": {
+      "bakingProperties": {
+        "temp": 120,
+        "levelFrom": 0.75,
+        "levelTo": 1,
+        "startScaleY": 0.8,
+        "endScaleY": 0.7,
+        "initialCode": "caveshrooms:cookedchoppedtemporalmushroom-item-perfect"
+      }
+    }
+  },
+  "combustiblePropsByType": {
+    "@*-(partbaked|perfect)": {
+      "meltingPoint": 150,
+      "meltingDuration": 15,
+      "smeltedRatio": 1,
+      "smeltingType": "bake",
+      "smeltedStack": { "type": "item", "code": "caveshrooms:cookedchoppedtemporalmushroom-item-charred" },
+      "requiresContainer": false
+    }
+  },
+  "nutritionPropsByType": {
+    "*-partbaked": { "satiety": 90, "foodcategory": "Vegetable", "health": -0.75, "psychedelic": 0.6 },
+    "*-perfect": { "satiety": 110, "foodcategory": "Vegetable", "health": -0.5, "psychedelic": 0.4 },
+    "*-charred": { "satiety": 100, "foodcategory": "Vegetable", "health": -0.25, "psychedelic": 0.2 }
+  },
+  "transitionablePropsByType": {
+    "@*-(partbaked|perfect)": [
+      {
+        "type": "Perish",
+        "freshHours": { "avg": 432 },
+        "transitionHours": { "avg": 72 },
+        "transitionedStack": { "type": "item", "code": "game:rot" }
+      }
+    ],
+    "*-charred": [
+      {
+        "type": "Perish",
+        "freshHours": { "avg": 1512 },
+        "transitionHours": { "avg": 120 },
+        "transitionedStack": { "type": "item", "code": "game:rot" }
+      }
+    ]
+  },
+  "creativeinventory": {
+    "general": [ "*" ],
+    "flora": [ "*" ]
+  }
+}

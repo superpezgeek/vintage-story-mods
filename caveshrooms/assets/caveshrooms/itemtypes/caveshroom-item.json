@@ -26,6 +26,14 @@
           "text": "caveshrooms:item-handbooktext-caveshroom-item"
         }
       ]
+    },
+    "bakingProperties": {
+      "temp": 120,
+      "levelFrom": 0.0,
+      "levelTo": 0.25,
+      "startScaleY": 1.0,
+      "endScaleY": 0.95,
+      "resultCode": "caveshrooms:cookedtemporalmushroom-item-partbaked"
     }
   },
   "nutritionProps": {
@@ -33,6 +41,14 @@
     "foodcategory": "Vegetable",
     "health": -1,
     "psychedelic": 0.8
+  },
+  "combustibleProps": {
+    "meltingPoint": 150,
+    "meltingDuration": 20,
+    "smeltedRatio": 1,
+    "smeltingType": "bake",
+    "smeltedStack": { "type": "item", "code": "caveshrooms:cookedtemporalmushroom-item-charred" },
+    "requiresContainer": false
   },
   "transitionableProps": [
     {

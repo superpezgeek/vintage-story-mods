@@ -1,0 +1,24 @@
+[
+  {
+    "ingredientPattern": "KV",
+    "recipeGroup": 1,
+    "ingredients": {
+      "K": { "type": "item", "code": "game:knife-*", "isTool": true },
+      "V": { "type": "item", "code": "caveshrooms:cookedtemporalmushroom-item-*", "name": "state" }
+    },
+    "width": 2,
+    "height": 1,
+    "output": { "type": "item", "code": "caveshrooms:cookedchoppedtemporalmushroom-item-{state}" }
+  },
+  {
+    "ingredientPattern": "KV",
+    "recipeGroup": 2,
+    "ingredients": {
+      "K": { "type": "item", "code": "game:cleaver-*", "isTool": true },
+      "V": { "type": "item", "code": "caveshrooms:cookedtemporalmushroom-item-*", "name": "state" }
+    },
+    "width": 2,
+    "height": 1,
+    "output": { "type": "item", "code": "caveshrooms:cookedchoppedtemporalmushroom-item-{state}" }
+  }
+]

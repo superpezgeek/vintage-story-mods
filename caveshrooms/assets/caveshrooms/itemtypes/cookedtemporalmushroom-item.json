@@ -1,0 +1,122 @@
+{
+  "code": "cookedtemporalmushroom-item",
+  "shape": { "base": "item/caveshroom-item" },
+  "maxstacksize": 32,
+  "variantgroups": [
+    { "code": "state", "states": [ "partbaked", "perfect", "charred" ] }
+  ],
+  "texturesByType": {
+    "*-partbaked": {
+      "cap": { "base": "block/plant/caveshroom-jim-partbaked" },
+      "stem": { "base": "block/plant/caveshroom-jim-partbaked" },
+      "gills": { "base": "block/plant/caveshroom-jim-gills-partbaked" }
+    },
+    "*-perfect": {
+      "cap": { "base": "block/plant/caveshroom-jim-perfect" },
+      "stem": { "base": "block/plant/caveshroom-jim-perfect" },
+      "gills": { "base": "block/plant/caveshroom-jim-gills-perfect" }
+    },
+    "*-charred": {
+      "cap": { "base": "block/plant/caveshroom-jim-charred" },
+      "stem": { "base": "block/plant/caveshroom-jim-charred" },
+      "gills": { "base": "block/plant/caveshroom-jim-gills-charred" }
+    }
+  },
+  "guiTransform": {
+    "rotation": { "x": 158, "y": 107, "z": 0 },
+    "origin": { "x": 0.5, "y": 0.2, "z": 0.5 },
+    "scale": 3.6
+  },
+  "tpHandTransform": {
+    "translation": { "x": -0.93, "y": -0.17, "z": -0.8 },
+    "rotation": { "x": 195, "y": -10, "z": -114 },
+    "origin": { "x": 0.5, "y": 0.1, "z": 0.5 },
+    "scale": 0.7
+  },
+  "groundTransform": {
+    "origin": { "x": 0.5, "y": 0, "z": 0.5 },
+    "scale": 6
+  },
+  "attributes": {
+    "handbook": {
+      "groupBy": [ "cookedtemporalmushroom-item-*" ],
+      "extraSections": [
+        {
+          "title": "caveshrooms:item-handbooktitle-cookedtemporalmushroom-item",
+          "text": "caveshrooms:item-handbooktext-cookedtemporalmushroom-item"
+        }
+      ]
+    }
+  },
+  "attributesByType": {
+    "*-partbaked": {
+      "bakingProperties": {
+        "temp": 120,
+        "levelFrom": 0.25,
+        "levelTo": 0.5,
+        "startScaleY": 1.0,
+        "endScaleY": 0.95,
+        "resultCode": "caveshrooms:cookedtemporalmushroom-item-perfect",
+        "initialCode": "caveshrooms:caveshroom-item"
+      }
+    },
+    "*-perfect": {
+      "bakingProperties": {
+        "temp": 120,
+        "levelFrom": 0.5,
+        "levelTo": 0.75,
+        "startScaleY": 0.95,
+        "endScaleY": 0.85,
+        "resultCode": "caveshrooms:cookedtemporalmushroom-item-charred",
+        "initialCode": "caveshrooms:cookedtemporalmushroom-item-partbaked"
+      }
+    },
+    "*-charred": {
+      "bakingProperties": {
+        "temp": 120,
+        "levelFrom": 0.75,
+        "levelTo": 1,
+        "startScaleY": 0.85,
+        "endScaleY": 0.7,
+        "initialCode": "caveshrooms:cookedtemporalmushroom-item-perfect"
+      }
+    }
+  },
+  "combustiblePropsByType": {
+    "@*-(partbaked|perfect)": {
+      "meltingPoint": 150,
+      "meltingDuration": 20,
+      "smeltedRatio": 1,
+      "smeltingType": "bake",
+      "smeltedStack": { "type": "item", "code": "caveshrooms:cookedtemporalmushroom-item-charred" },
+      "requiresContainer": false
+    }
+  },
+  "nutritionPropsByType": {
+    "*-partbaked": { "satiety": 90, "foodcategory": "Vegetable", "health": -0.75, "psychedelic": 0.6 },
+    "*-perfect": { "satiety": 110, "foodcategory": "Vegetable", "health": -0.5, "psychedelic": 0.4 },
+    "*-charred": { "satiety": 100, "foodcategory": "Vegetable", "health": -0.25, "psychedelic": 0.2 }
+  },
+  "transitionablePropsByType": {
+    "@*-(partbaked|perfect)": [
+      {
+        "type": "Perish",
+        "freshHours": { "avg": 432 },
+        "transitionHours": { "avg": 72 },
+        "transitionedStack": { "type": "item", "code": "game:rot" }
+      }
+    ],
+    "*-charred": [
+      {
+        "type": "Perish",
+        "freshHours": { "avg": 1512 },
+        "transitionHours": { "avg": 120 },
+        "transitionedStack": { "type": "item", "code": "game:rot" }
+      }
+    ]
+  },
+  "creativeinventory": {
+    "general": [ "*" ],
+    "flora": [ "*" ]
+  }
+}
