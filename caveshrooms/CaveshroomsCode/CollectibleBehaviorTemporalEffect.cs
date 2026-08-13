@@ -1,7 +1,6 @@
 using System;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
-using Vintagestory.API.Datastructures;
 using Vintagestory.GameContent;
 
 namespace Caveshrooms
@@ -9,23 +8,13 @@ namespace Caveshrooms
     // Applied to every edible Temporal Mushroom item (raw, chopped, cooked, cooked-chopped).
     // Scales stability loss and glow gain off the eaten stack's own Psychedelic nutrition value,
     // so cooked/charred forms (which already carry a reduced Psychedelic value) automatically
-    // cause a proportionally smaller effect without needing separate per-item config.
+    // cause a proportionally smaller effect. Strength values come from CaveshroomsModSystem.Config
+    // (one shared config, not per-item JSON) so a server admin can retune eating all four forms
+    // at once without a rebuild.
     public class CollectibleBehaviorTemporalEffect : CollectibleBehavior
     {
-        private double stabilityLossPerPsychedelic;
-        private float glowGainPerPsychedelic;
-        private float maxGlow;
-
         public CollectibleBehaviorTemporalEffect(CollectibleObject collObj) : base(collObj)
         {
-        }
-
-        public override void Initialize(JsonObject properties)
-        {
-            base.Initialize(properties);
-            stabilityLossPerPsychedelic = properties["stabilityLossPerPsychedelic"].AsDouble(0.05);
-            glowGainPerPsychedelic = properties["glowGainPerPsychedelic"].AsFloat(2.5f);
-            maxGlow = properties["maxGlow"].AsFloat(20f);
         }
 
         public override void OnHeldInteractStop(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ref EnumHandling handling)
@@ -42,14 +31,16 @@ namespace Caveshrooms
             float psychedelic = stack.Collectible.GetNutritionProperties(byEntity.World, stack, byEntity)?.Psychedelic ?? 0f;
             if (psychedelic <= 0f) return;
 
+            CaveshroomsConfig config = CaveshroomsModSystem.Config;
+
             EntityBehaviorTemporalStabilityAffected? stabilityBehavior = byEntity.GetBehavior<EntityBehaviorTemporalStabilityAffected>();
             if (stabilityBehavior != null)
             {
-                stabilityBehavior.OwnStability = Math.Max(0.0, stabilityBehavior.OwnStability - psychedelic * stabilityLossPerPsychedelic);
+                stabilityBehavior.OwnStability = Math.Max(0.0, stabilityBehavior.OwnStability - psychedelic * config.StabilityLossPerPsychedelic);
             }
 
             float currentGlow = byEntity.WatchedAttributes.GetFloat("caveshrooms:temporalGlow", 0f);
-            float newGlow = Math.Min(maxGlow, currentGlow + psychedelic * glowGainPerPsychedelic);
+            float newGlow = Math.Min(config.MaxGlow, currentGlow + psychedelic * config.GlowGainPerPsychedelic);
             byEntity.WatchedAttributes.SetFloat("caveshrooms:temporalGlow", newGlow);
             byEntity.WatchedAttributes.MarkPathDirty("caveshrooms:temporalGlow");
         }

@@ -89,14 +89,14 @@
       {
         "type": "block",
         "code": "caveshrooms:caveshroom-empty",
-        "quantity": { "avg": 1 }
+        "quantity": { "avg": 0.5, "var": 0 }
       }
     ],
     "*-flowering": [
       {
         "type": "block",
         "code": "caveshrooms:caveshroom-empty",
-        "quantity": { "avg": 1 }
+        "quantity": { "avg": 0.5, "var": 0 }
       }
     ],
     "*-ripe": [
@@ -108,7 +108,7 @@
       {
         "type": "block",
         "code": "caveshrooms:caveshroom-empty",
-        "quantity": { "avg": 1 }
+        "quantity": { "avg": 0.5, "var": 0 }
       }
     ],
     "*": []

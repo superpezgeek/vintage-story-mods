@@ -1,12 +1,13 @@
 {
   "code": "cookedtemporalmushroom-item",
+  "class": "Caveshrooms.ItemTemporalMushroom",
   "shape": { "base": "item/caveshroom-item" },
   "maxstacksize": 32,
   "variantgroups": [
     { "code": "state", "states": [ "partbaked", "perfect", "charred" ] }
   ],
   "behaviors": [
-    { "name": "CaveshroomsTemporalEffect", "properties": { "stabilityLossPerPsychedelic": 0.05, "glowGainPerPsychedelic": 2.5, "maxGlow": 20 } }
+    { "name": "CaveshroomsTemporalEffect" }
   ],
   "texturesByType": {
     "*-partbaked": {
@@ -94,29 +95,6 @@
       "smeltedStack": { "type": "item", "code": "caveshrooms:cookedtemporalmushroom-item-charred" },
       "requiresContainer": false
     }
-  },
-  "nutritionPropsByType": {
-    "*-partbaked": { "satiety": 90, "foodcategory": "Vegetable", "health": -0.75, "psychedelic": 0.6 },
-    "*-perfect": { "satiety": 110, "foodcategory": "Vegetable", "health": -0.5, "psychedelic": 0.4 },
-    "*-charred": { "satiety": 100, "foodcategory": "Vegetable", "health": -0.25, "psychedelic": 0.2 }
-  },
-  "transitionablePropsByType": {
-    "@*-(partbaked|perfect)": [
-      {
-        "type": "Perish",
-        "freshHours": { "avg": 432 },
-        "transitionHours": { "avg": 72 },
-        "transitionedStack": { "type": "item", "code": "game:rot" }
-      }
-    ],
-    "*-charred": [
-      {
-        "type": "Perish",
-        "freshHours": { "avg": 1512 },
-        "transitionHours": { "avg": 120 },
-        "transitionedStack": { "type": "item", "code": "game:rot" }
-      }
-    ]
   },
   "creativeinventory": {
     "general": [ "*" ],

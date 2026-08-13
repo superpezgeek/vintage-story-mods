@@ -1,10 +1,11 @@
 {
   "code": "caveshroom-item",
+  "class": "Caveshrooms.ItemTemporalMushroom",
   "shape": { "base": "item/caveshroom-item" },
   "maxstacksize": 32,
   "lightHsv": [ 32, 7, 6 ],
   "behaviors": [
-    { "name": "CaveshroomsTemporalEffect", "properties": { "stabilityLossPerPsychedelic": 0.05, "glowGainPerPsychedelic": 2.5, "maxGlow": 20 } }
+    { "name": "CaveshroomsTemporalEffect" }
   ],
   "guiTransform": {
     "rotation": { "x": 158, "y": 107, "z": 0 },
@@ -39,12 +40,6 @@
       "resultCode": "caveshrooms:cookedtemporalmushroom-item-partbaked"
     }
   },
-  "nutritionProps": {
-    "satiety": 80,
-    "foodcategory": "Vegetable",
-    "health": -1,
-    "psychedelic": 0.8
-  },
   "combustibleProps": {
     "meltingPoint": 150,
     "meltingDuration": 20,
@@ -53,14 +48,6 @@
     "smeltedStack": { "type": "item", "code": "caveshrooms:cookedtemporalmushroom-item-charred" },
     "requiresContainer": false
   },
-  "transitionableProps": [
-    {
-      "type": "Perish",
-      "freshHours": { "avg": 96 },
-      "transitionHours": { "avg": 24 },
-      "transitionedStack": { "type": "item", "code": "game:rot" }
-    }
-  ],
   "creativeinventory": {
     "general": [ "*" ],
     "flora": [ "*" ]

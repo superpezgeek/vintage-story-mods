@@ -2,8 +2,8 @@
 .SYNOPSIS
   Builds and packages a Caveshrooms release: bumps modinfo.json's version,
   compiles CaveshroomsCode in Release mode, zips a clean distributable
-  package into releases/, and drops a copy into the live Mods folder for
-  immediate testing.
+  package into releases/, and drops a copy into the live Mods folder
+  (clearing any stale unpack cache for it) for immediate testing.
 
 .PARAMETER Version
   Set an exact version instead of auto-bumping (e.g. "0.3.0" or
@@ -173,6 +173,20 @@ if (-not $SkipDeploy) {
     $deployPath = Join-Path $modsDir "Caveshrooms.zip"
     Copy-Item -Path $zipPath -Destination $deployPath -Force
     Write-Host "Deployed to: $deployPath"
+
+    # The deploy target is always this same fixed filename (see param block above for why),
+    # which means every local rebuild reuses the same Cache\unpack\Caveshrooms.zip_<hash> key.
+    # Whether that hash is content-based or something weaker (e.g. name+size) isn't something
+    # we've verified, so delete any existing unpack cache for it here rather than assume - a
+    # stale extraction served from a same-named zip is exactly the kind of thing that already
+    # cost a long debugging session once on the server side.
+    $unpackCacheDir = Join-Path $env:APPDATA "VintagestoryData\Cache\unpack"
+    if (Test-Path $unpackCacheDir) {
+        Get-ChildItem -Path $unpackCacheDir -Directory -Filter "Caveshrooms.zip_*" | ForEach-Object {
+            Remove-Item -Path $_.FullName -Recurse -Force
+            Write-Host "Cleared stale unpack cache: $($_.FullName)"
+        }
+    }
 }
 
 Write-Host "Done. Released $newVersion."

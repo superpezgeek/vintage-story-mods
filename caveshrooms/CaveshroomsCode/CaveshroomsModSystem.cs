@@ -11,11 +11,11 @@ namespace Caveshrooms
     public class CaveshroomsModSystem : ModSystem
     {
         private const string HarmonyId = "caveshrooms";
+        private const string ConfigFilename = "Caveshrooms.json";
 
-        // Full 20 glow fades to nothing over ~8 in-game hours if you stop eating (tracked via
-        // the world calendar, not real time, so /time add and calendar speed changes both
-        // affect it correctly). Unvalidated starting guess - tune if it feels too fast/slow.
-        private const float GlowDecayPerInGameHour = 20f / 8f;
+        // Loaded once in Start() and read from everywhere else, including the static Harmony
+        // patch in EntityPlayerGlowPatch which has no other way to reach mod state.
+        public static CaveshroomsConfig Config { get; private set; } = new CaveshroomsConfig();
 
         private Harmony? harmony;
         private double lastCalendarTotalHours = double.NaN;
@@ -24,13 +24,29 @@ namespace Caveshrooms
         {
             base.Start(api);
 
+            Config = api.LoadModConfig<CaveshroomsConfig>(ConfigFilename) ?? new CaveshroomsConfig();
+            api.StoreModConfig(Config, ConfigFilename);
+
             api.RegisterCollectibleBehaviorClass("CaveshroomsTemporalEffect", typeof(CollectibleBehaviorTemporalEffect));
+            api.RegisterItemClass("Caveshrooms.ItemTemporalMushroom", typeof(ItemTemporalMushroom));
 
             if (!Harmony.HasAnyPatches(HarmonyId))
             {
                 harmony = new Harmony(HarmonyId);
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
             }
+        }
+
+        // Runs after the engine's own jsonpatches loader (ExecuteOrder 0.05) but before the
+        // block/item loader (0.2) parses itemtypes/blocktypes JSON - the documented window for
+        // rewriting raw asset bytes before they're consumed. See CaveshroomsAssetTuning for why
+        // (and how defensively) this rewrites two of our own JSON assets in place using Config.
+        public override void AssetsLoaded(ICoreAPI api)
+        {
+            base.AssetsLoaded(api);
+
+            CaveshroomsAssetTuning.RewriteBlocktypeAsset(api, Config);
+            CaveshroomsAssetTuning.RewriteWorldgenAsset(api, Config);
         }
 
         public override void StartServerSide(ICoreServerAPI api)
@@ -53,7 +69,7 @@ namespace Caveshrooms
             lastCalendarTotalHours = totalHours;
             if (elapsedHours <= 0) return;
 
-            float decayAmount = (float)(GlowDecayPerInGameHour * elapsedHours);
+            float decayAmount = (float)(Config.GlowDecayPerInGameHour * elapsedHours);
 
             foreach (IPlayer player in api.World.AllOnlinePlayers)
             {
@@ -88,7 +104,7 @@ namespace Caveshrooms
                     string stabilityText = stabilityBehavior != null ? stabilityBehavior.OwnStability.ToString("0.000") : "n/a";
 
                     return TextCommandResult.Success(
-                        $"Temporal glow: {glow:0.0} / 20\n" +
+                        $"Temporal glow: {glow:0.0} / {Config.MaxGlow:0}\n" +
                         $"Temporal stability: {stabilityText}\n" +
                         $"Psychedelic level: {psychedelic:0.00}\n" +
                         $"Intoxication level: {intoxication:0.00}"
