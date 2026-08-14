@@ -73,13 +73,29 @@ reload fine from a plain folder, but the texture atlas silently fails to
 build for a plain-folder mod — blocks render flat white/untextured with
 no error logged. Packaging as a `.zip` fixes it immediately every time.
 
-**Fast iteration on JSON/textures only** (no C# changes): just rezip and
-drop it in the live `Mods` folder, no version bump needed for a reload to
-pick it up:
+**Fast iteration on JSON/textures only** (no C# changes), **local testing
+only**: just rezip and drop it in the live `Mods` folder, no version bump
+needed for a reload to pick it up:
 
 ```powershell
 Compress-Archive -Path "<repo>\Caveshrooms\*" -DestinationPath "$env:APPDATA\VintagestoryData\Mods\Caveshrooms.zip" -Force
 ```
+
+**Never use this command's output for anything that goes to the (Linux)
+server** — `Compress-Archive` writes zip entry paths with Windows'
+backslash separator, which Windows tolerates everywhere (including this
+local-only use) but Linux does not: unpacking on the server produces
+literal files/folders named e.g. `assets\caveshrooms\blocktypes`
+(backslash as part of the name) instead of properly nested directories,
+so the game's asset manager silently finds nothing under
+`assets/caveshrooms/` at all — items, blocks, worldgen all missing, while
+the mod's C# still loads fine since that doesn't touch the asset tree.
+This was a real, confirmed bug that cost a long debugging session before
+being traced to this exact cause. `release.ps1` builds zips correctly
+(forward slashes, verified) — always use it for anything server-bound,
+even for a JSON-only change with no real version bump needed
+(`.\scripts\release.ps1 -Version <current version>` repackages without
+advancing anything).
 
 **Any C# change, or a real version bump**: use the release script instead
 (see below) — it builds `CaveshroomsCode`, and a stale `Caveshrooms.dll`

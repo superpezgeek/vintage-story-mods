@@ -162,7 +162,30 @@ $excludeNames = @("CaveshroomsCode", "scripts", "releases", ".git", ".gitignore"
 $items = Get-ChildItem -Path $repoRoot -Exclude $excludeNames
 
 if (Test-Path $zipPath) { Remove-Item $zipPath }
-Compress-Archive -Path $items.FullName -DestinationPath $zipPath
+
+# NOT Compress-Archive - it (and even .NET's own ZipFile.CreateFromDirectory) write zip entry
+# paths using Windows' backslash separator. Windows tolerates that everywhere, including this
+# script's own local-Mods-folder deploy below, but a Linux game server does not: unpacking the
+# zip there produces literal files/folders named e.g. "assets\caveshrooms\blocktypes" (backslash
+# as part of the name) instead of properly nested directories, so the game's asset manager can
+# never find anything under assets/caveshrooms/ - items, blocks, worldgen, all silently missing,
+# while the mod's C# still loads fine since that doesn't depend on the asset tree at all. Confirmed
+# this exact failure mode against a live server before adding this fix. Build the zip by hand
+# instead, forcing forward slashes in every entry name.
+Add-Type -AssemblyName System.IO.Compression
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$zip = [System.IO.Compression.ZipFile]::Open($zipPath, [System.IO.Compression.ZipArchiveMode]::Create)
+try {
+    foreach ($item in $items) {
+        $files = if ($item.PSIsContainer) { Get-ChildItem -Path $item.FullName -Recurse -File } else { $item }
+        foreach ($file in $files) {
+            $relativePath = $file.FullName.Substring($repoRoot.Length + 1).Replace('\', '/')
+            [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $file.FullName, $relativePath) | Out-Null
+        }
+    }
+} finally {
+    $zip.Dispose()
+}
 Write-Host "Packaged: $zipPath"
 
 # --- Deploy for local testing ---
