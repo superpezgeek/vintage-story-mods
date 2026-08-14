@@ -39,7 +39,7 @@ Caveshrooms/
 ├── CaveshroomsCode/                 # C# source (config, stability drain, player glow, nutrition)
 │   ├── CaveshroomsCode.csproj
 │   ├── CaveshroomsConfig.cs         # ModConfig/Caveshrooms.json shape + defaults
-│   ├── CaveshroomsModSystem.cs      # registers everything, loads config, glow decay tick, .temporalstatus command
+│   ├── CaveshroomsModSystem.cs      # registers everything, loads config, glow decay tick, .temporalstatus/.temporalstatusadmin
 │   ├── CaveshroomsAssetTuning.cs    # rewrites harvest/glow/worldgen JSON from config at AssetsLoaded
 │   ├── CollectibleBehaviorTemporalEffect.cs  # applies the stability/glow effect when eaten
 │   ├── ItemTemporalMushroom.cs      # config-driven nutrition + perishability
@@ -140,8 +140,9 @@ This is what the file looks like with every default value, annotated below
 — real JSON can't have comments, so the actual file won't have them, but
 the structure and property names (including capitalization) are exactly
 what you'll see when you open it. Edit any value and restart to apply it;
-check current effective glow/stability any time in-game with
-`.temporalstatus`.
+check current effective glow/stability/eaten-count any time in-game with
+`.temporalstatus` (your own) or `.temporalstatusadmin <player>` (any
+online player, requires the `controlserver` privilege).
 
 ```jsonc
 {
