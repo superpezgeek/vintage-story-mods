@@ -1,0 +1,12 @@
+*.local.md
+
+# Build output (regenerate with scripts/release.ps1 or `dotnet build TheUnknowingCode`)
+/TheUnknowing.dll
+/TheUnknowing.pdb
+/TheUnknowing.deps.json
+/TheUnknowing.runtimeconfig.json
+TheUnknowingCode/obj/
+TheUnknowingCode/bin/
+
+# Packaged release zips (regenerate with scripts/release.ps1)
+/releases/

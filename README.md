@@ -7,6 +7,7 @@ A collection of [Vintage Story](https://www.vintagestory.at/) mods, developed an
 | Mod | What it does | Status |
 | --- | --- | --- |
 | [Caveshrooms](caveshrooms/) | A mushroom that fruits from patches of temporally unstable substrate deep in caves. Grows on its own over time, glows, and eating it drains your temporal stability while making you glow — cumulatively. | Release candidate, in multiplayer testing |
+| [The Unknowing](theunknowing/) | Admin-summoned storm of forgetting that consumes an abandoned land claim, then regenerates the land beneath it. | Early scaffold — claim targeting only, no storm mechanics yet |
 
 ## Patterns worth reusing for the next one
 
