@@ -53,6 +53,8 @@ namespace Caveshrooms
         {
             base.StartServerSide(api);
 
+            api.World.Logger.StoryEvent("Mushrooms glowing deep within caves...");
+
             api.Event.RegisterGameTickListener(_ => DecayGlow(api), 1000);
         }
 
