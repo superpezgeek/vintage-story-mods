@@ -56,6 +56,40 @@ namespace Caveshrooms
             api.World.Logger.StoryEvent("Mushrooms glowing deep within caves...");
 
             api.Event.RegisterGameTickListener(_ => DecayGlow(api), 1000);
+
+            // Admin-only equivalent of the client's own .temporalstatus, for checking another
+            // player's stats - e.g. deciding when a milestone/achievement system (not built yet)
+            // should trigger. Online only, since these values live on the live entity's
+            // WatchedAttributes - there's nothing to read for an offline player.
+            api.ChatCommands.Create("temporalstatusadmin")
+                .WithDescription("Shows another online player's temporal glow, stability, and psychedelic/intoxication levels.")
+                .RequiresPrivilege(Privilege.controlserver)
+                .WithArgs(api.ChatCommands.Parsers.OnlinePlayer("player"))
+                .HandleWith(args =>
+                {
+                    IPlayer target = (IPlayer)args[0];
+                    Entity? entity = target.Entity;
+                    if (entity == null) return TextCommandResult.Error($"{target.PlayerName} has no entity right now.");
+
+                    return TextCommandResult.Success($"{target.PlayerName}:\n" + FormatTemporalStatus(entity));
+                });
+        }
+
+        private static string FormatTemporalStatus(Entity entity)
+        {
+            float glow = entity.WatchedAttributes.GetFloat("caveshrooms:temporalGlow", 0f);
+            float psychedelic = entity.WatchedAttributes.GetFloat("psychedelic", 0f);
+            float intoxication = entity.WatchedAttributes.GetFloat("intoxication", 0f);
+            int eatenCount = entity.WatchedAttributes.GetInt("caveshrooms:temporalMushroomsEaten", 0);
+            EntityBehaviorTemporalStabilityAffected? stabilityBehavior = entity.GetBehavior<EntityBehaviorTemporalStabilityAffected>();
+
+            string stabilityText = stabilityBehavior != null ? stabilityBehavior.OwnStability.ToString("0.000") : "n/a";
+
+            return $"Temporal glow: {glow:0.0} / {Config.MaxGlow:0}\n" +
+                   $"Temporal stability: {stabilityText}\n" +
+                   $"Psychedelic level: {psychedelic:0.00}\n" +
+                   $"Intoxication level: {intoxication:0.00}\n" +
+                   $"Temporal mushrooms eaten: {eatenCount}";
         }
 
         private void DecayGlow(ICoreServerAPI api)
@@ -98,19 +132,7 @@ namespace Caveshrooms
                     Entity? entity = api.World.Player?.Entity;
                     if (entity == null) return TextCommandResult.Error("No player entity found.");
 
-                    float glow = entity.WatchedAttributes.GetFloat("caveshrooms:temporalGlow", 0f);
-                    float psychedelic = entity.WatchedAttributes.GetFloat("psychedelic", 0f);
-                    float intoxication = entity.WatchedAttributes.GetFloat("intoxication", 0f);
-                    EntityBehaviorTemporalStabilityAffected? stabilityBehavior = entity.GetBehavior<EntityBehaviorTemporalStabilityAffected>();
-
-                    string stabilityText = stabilityBehavior != null ? stabilityBehavior.OwnStability.ToString("0.000") : "n/a";
-
-                    return TextCommandResult.Success(
-                        $"Temporal glow: {glow:0.0} / {Config.MaxGlow:0}\n" +
-                        $"Temporal stability: {stabilityText}\n" +
-                        $"Psychedelic level: {psychedelic:0.00}\n" +
-                        $"Intoxication level: {intoxication:0.00}"
-                    );
+                    return TextCommandResult.Success(FormatTemporalStatus(entity));
                 });
         }
 

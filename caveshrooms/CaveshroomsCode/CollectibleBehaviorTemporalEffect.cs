@@ -51,6 +51,13 @@ namespace Caveshrooms
             float newGlow = Math.Min(config.MaxGlow, currentGlow + psychedelic * config.GlowGainPerPsychedelic);
             byEntity.WatchedAttributes.SetFloat("caveshrooms:temporalGlow", newGlow);
             byEntity.WatchedAttributes.MarkPathDirty("caveshrooms:temporalGlow");
+
+            // Lifetime count, doesn't decay (unlike temporalGlow above) - counts any genuine eat
+            // of any of the four edible forms, since all of them carry this same behavior and a
+            // positive Psychedelic value. No milestone/threshold behavior yet - just the count.
+            int eatenCount = byEntity.WatchedAttributes.GetInt("caveshrooms:temporalMushroomsEaten", 0) + 1;
+            byEntity.WatchedAttributes.SetInt("caveshrooms:temporalMushroomsEaten", eatenCount);
+            byEntity.WatchedAttributes.MarkPathDirty("caveshrooms:temporalMushroomsEaten");
         }
     }
 }
