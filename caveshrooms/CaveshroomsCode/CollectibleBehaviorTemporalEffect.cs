@@ -13,6 +13,13 @@ namespace Caveshrooms
     // at once without a rebuild.
     public class CollectibleBehaviorTemporalEffect : CollectibleBehavior
     {
+        // CollectibleObject.OnHeldInteractStop fires on ANY release, not just a completed eat,
+        // despite what its own doc comment implies - vanilla's tryEatStop only actually grants
+        // nutrition (and consumes the item) if secondsUsed >= 0.95f, discarding a too-quick
+        // tap-and-release. Match that exact threshold here too, or a quick tap would drain
+        // stability/add glow without ever actually eating the mushroom.
+        private const float MinSecondsUsedToEat = 0.95f;
+
         public CollectibleBehaviorTemporalEffect(CollectibleObject collObj) : base(collObj)
         {
         }
@@ -24,6 +31,7 @@ namespace Caveshrooms
             // Leave `handling` as PassThrough - the base CollectibleObject still needs to run
             // its own tryEatStop() afterwards to apply satiety/health as normal.
             if (byEntity.World.Side != EnumAppSide.Server) return;
+            if (secondsUsed < MinSecondsUsedToEat) return;
 
             ItemStack? stack = slot.Itemstack;
             if (stack == null) return;

@@ -251,10 +251,15 @@ match to the exact strings vanilla's own berry bush JSON uses, since
 cycle breaks.
 
 **Temporal stability drain & glow.** `CollectibleBehaviorTemporalEffect`
-hooks `OnHeldInteractStop` (fires only on a genuinely completed eat, not
-a cancelled one) and, server-side only, reads the eaten stack's own
-`Psychedelic` nutrition value to scale both effects — this is why cooked
-forms automatically apply less without needing separate config. Stability
+hooks `OnHeldInteractStop`, which — despite its own doc comment implying
+otherwise — fires on *any* release, not just a completed eat; vanilla's
+own `tryEatStop` only actually grants nutrition if held for
+`secondsUsed >= 0.95f`, so the behavior checks that same threshold itself
+before applying anything, or a quick tap-and-release would drain
+stability/add glow without ever really eating the mushroom. Server-side
+only, reads the eaten stack's own `Psychedelic` nutrition value to scale
+both effects — this is why cooked forms automatically apply less without
+needing separate config. Stability
 is read/written through vanilla's own
 `EntityBehaviorTemporalStabilityAffected.OwnStability` (the same
 attribute the game's storm/rift system already uses). The glow is a
