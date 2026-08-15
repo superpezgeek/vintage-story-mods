@@ -45,8 +45,21 @@ so far.
       `StormDurationHours`). `Collapsing -> Regenerating -> Done` isn't
       implemented yet (nothing to do there until 0.4's regen call
       exists).
-- [ ] Containment: periodically despawn any storm-owned entity found
-      outside the storm's chunk bounds.
+- [x] Containment: periodically despawn any storm-owned entity found
+      outside the storm's chunk bounds. Runs on the existing 10s
+      `OnGameTick` (no new tick needed) - checks every tracked entity's
+      live position against `ChunkColumns` via the new
+      `ClaimChunkMath.ToChunkColumn` (same floor/shift math as claim
+      targeting, but for a fractional entity position instead of a
+      claim's integer bounds), despawns anything outside, and also
+      prunes already-dead entities as a second safety net alongside
+      `OnSpawnTick`'s own pruning (the two run on different intervals,
+      so an entity can die between one tick and the next). Confirmed
+      live with `.debug wireframe chunk` for a visual boundary: drifters
+      spawned near a chunk edge wandered out and got despawned within
+      one tick (explains why spawns can seem to silently not happen -
+      they did, just briefly), and manually baiting one across the
+      boundary confirmed the despawn.
 - [x] Mob spawning: periodic timed spawns within the chunk set while
       `Active`. Its own tick (`EnemySpawnIntervalSeconds`, default 30s),
       spawns a random config-listed entity (`game:drifter-normal`/

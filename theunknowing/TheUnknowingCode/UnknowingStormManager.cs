@@ -76,9 +76,10 @@ namespace TheUnknowing
                 $"Active for {storm.DurationHours:0} in-game hour(s).");
         }
 
-        // Registered on a real-time tick by TheUnknowingModSystem. Only handles the
-        // Active -> Collapsing transition so far - Collapsing itself is currently a dead end
-        // (no spawning to stop yet, no regen wired up yet; see ROADMAP 0.2/0.4).
+        // Registered on a real-time tick by TheUnknowingModSystem. Handles the Active ->
+        // Collapsing transition (Collapsing itself is currently a dead end - no regen wired up
+        // yet; see ROADMAP 0.4) and containment - keeping every storm-owned entity inside the
+        // chunk columns it was summoned over.
         public void OnGameTick()
         {
             double nowHours = api.World.Calendar.TotalHours;
@@ -92,9 +93,46 @@ namespace TheUnknowing
                     api.World.Logger.Notification($"[TheUnknowing] Storm over '{storm.TargetPlayerName}' is collapsing (duration elapsed).");
                     changed = true;
                 }
+
+                if (EnforceContainment(storm))
+                {
+                    changed = true;
+                }
             }
 
             if (changed) Persist();
+        }
+
+        // Despawns any tracked entity that's wandered outside the storm's chunk columns (e.g.
+        // fled a fight, wandered off) - the storm spawned it, it doesn't get to leave. Also prunes
+        // already-dead/despawned entities from tracking, same as OnSpawnTick does - the two run on
+        // different intervals, so an entity could die between spawn-tick checks.
+        private bool EnforceContainment(UnknowingStorm storm)
+        {
+            bool changed = false;
+
+            for (int i = storm.SpawnedEntityIds.Count - 1; i >= 0; i--)
+            {
+                long entityId = storm.SpawnedEntityIds[i];
+                Entity? entity = api.World.GetEntityById(entityId);
+                if (entity == null)
+                {
+                    storm.SpawnedEntityIds.RemoveAt(i);
+                    changed = true;
+                    continue;
+                }
+
+                (int chunkX, int chunkZ) = ClaimChunkMath.ToChunkColumn(entity.Pos.X, entity.Pos.Z);
+                bool inBounds = storm.ChunkColumns.Any(c => c.ChunkX == chunkX && c.ChunkZ == chunkZ);
+                if (!inBounds)
+                {
+                    api.World.DespawnEntity(entity, new EntityDespawnData { Reason = EnumDespawnReason.Removed });
+                    storm.SpawnedEntityIds.RemoveAt(i);
+                    changed = true;
+                }
+            }
+
+            return changed;
         }
 
         // Registered on its own real-time tick by TheUnknowingModSystem, at
