@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -40,6 +41,15 @@ namespace TheUnknowing
             }
 
             return columns;
+        }
+
+        // Same block->chunk math as above, for a live (fractional) entity position rather than a
+        // claim's integer block bounds. Math.Floor before the shift matters here specifically
+        // because entity coordinates are doubles - (int)(-0.5) truncates to 0, not -1, which
+        // would put a position just west/north of the origin in the wrong chunk.
+        public static (int ChunkX, int ChunkZ) ToChunkColumn(double blockX, double blockZ)
+        {
+            return ((int)Math.Floor(blockX) >> 5, (int)Math.Floor(blockZ) >> 5);
         }
     }
 }
