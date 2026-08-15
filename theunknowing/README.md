@@ -7,17 +7,23 @@ erases and regenerates the land underneath it. In the server's lore,
 this is what happens when a player is forgotten: they quit, and The
 Unknowing comes for what they left behind.
 
-## Current status — early scaffold
+## Current status — 0.2 in progress
 
 - `/unknowing-storm <playerName>` exists and is admin-gated
-  (`controlserver` privilege), targeting by the claim's
-  `LastKnownOwnerName` so it works even though the player is offline.
-- Right now it's a **targeting dry run only**: it resolves every claim
-  that player owns, computes the chunk columns they cover, and reports
-  back. It doesn't touch the claim or the world yet.
-- Nothing else — claim suppression/removal, the storm itself (contained
-  mob spawning, VFX), and the final `/wgen regen` cleanup — is built.
-  See `ROADMAP.md`.
+  (`controlserver` privilege), resolving the target through `PlayerData`
+  (works whether the player is online or has quit) rather than anything
+  claim-specific.
+- Running it **removes every claim that player owns immediately** —
+  confirmed live: the base becomes buildable/lootable the instant the
+  command runs — and records a new storm (target, chunk columns
+  covered, start time, duration) that persists across a server restart.
+- A tick loop flips the storm from `Active` to `Collapsing` once
+  `StormDurationHours` (config, default 48) of in-game time has passed.
+  `Collapsing` doesn't do anything yet — no spawns to stop, no regen
+  wired up.
+- Still missing: containment (despawning storm-owned mobs that wander
+  outside the chunk bounds), mob spawning, VFX, and the final
+  `/wgen regen` cleanup. See `ROADMAP.md`.
 
 ## Folder structure
 
@@ -78,13 +84,19 @@ last step.
 
 **Claim targeting.** `LandClaim` has no stable numeric ID in the API —
 `/land list` only shows a per-owner index, meaningless for an admin
-targeting someone else's claim. `/unknowing-storm` instead matches on
-`LandClaim.LastKnownOwnerName`, the same offline-safe approach the
-engine's own `/land adminfree <playerName>` uses. A player can own
-multiple claims, and a single claim can have multiple disjoint `Areas`
-(an L-shaped base) — `ClaimChunkMath.GetCoveredChunkColumns` unions
-chunk columns across all of them rather than assuming one contiguous
-cuboid.
+targeting someone else's claim. `/unknowing-storm` resolves the given
+name via `api.PlayerData.GetPlayerDataByLastKnownName` (the persistent
+per-player record, populated at first join and kept regardless of
+online status) to get a `PlayerUID`, then matches claims on
+`LandClaim.OwnedByPlayerUid`. Confirmed live that `LandClaim`'s own
+`LastKnownOwnerName` field is **not** a reliable match target — it came
+back empty for a claim created moments earlier by a still-online
+player, so it's not populated at claim-creation time (most likely only
+gets backfilled on some other event, e.g. disconnect). `PlayerData` is
+the authoritative source instead. A player can own multiple claims, and
+a single claim can have multiple disjoint `Areas` (an L-shaped base) —
+`ClaimChunkMath.GetCoveredChunkColumns` unions chunk columns across all
+of them rather than assuming one contiguous cuboid.
 
 **Chunk math.** Chunks are 32×32 blocks. Column index uses `>> 5`
 (arithmetic right shift), not `/ 32` — integer division truncates

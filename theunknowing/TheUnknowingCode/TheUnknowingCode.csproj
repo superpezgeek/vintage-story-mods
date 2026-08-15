@@ -32,6 +32,10 @@
       <HintPath>C:\Users\DJRic\AppData\Roaming\Vintagestory\Lib\Newtonsoft.Json.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="protobuf-net">
+      <HintPath>C:\Users\DJRic\AppData\Roaming\Vintagestory\Lib\protobuf-net.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
 </Project>

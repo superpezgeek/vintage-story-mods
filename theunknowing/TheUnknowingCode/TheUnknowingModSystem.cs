@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
@@ -8,42 +5,30 @@ namespace TheUnknowing
 {
     public class TheUnknowingModSystem : ModSystem
     {
+        private const string ConfigFilename = "TheUnknowing.json";
+
         public override void StartServerSide(ICoreServerAPI api)
         {
             base.StartServerSide(api);
 
+            UnknowingConfig config = api.LoadModConfig<UnknowingConfig>(ConfigFilename) ?? new UnknowingConfig();
+            api.StoreModConfig(config, ConfigFilename);
+
+            var stormManager = new UnknowingStormManager(api, config);
+            api.Event.RegisterGameTickListener(_ => stormManager.OnGameTick(), 10000);
+            api.Event.RegisterGameTickListener(_ => stormManager.OnSpawnTick(), (int)(config.EnemySpawnIntervalSeconds * 1000));
+
             api.ChatCommands.Create("unknowing-storm")
                 .WithAlias(new[] { "unknowingstorm" })
-                .WithDescription("Summons an Unknowing Storm over every land claim owned by the given player (offline is fine).")
+                .WithDescription("Summons an Unknowing Storm over every land claim owned by the given player (offline is fine) - erases the claim(s) and starts the storm.")
                 .RequiresPrivilege(Privilege.controlserver)
                 .WithArgs(api.ChatCommands.Parsers.Word("playerName"))
-                .HandleWith(args => OnUnknowingStorm(api, (string)args[0]));
-        }
+                .HandleWith(args => stormManager.StartStorm((string)args[0]));
 
-        // Targets by LastKnownOwnerName rather than resolving a live player UID - the whole
-        // point is summoning this on someone who has already quit, so there's no online player
-        // (or PlayerUidMapping lookup) to resolve against. Matches the engine's own convention
-        // for offline-safe admin claim commands (/land adminfree <playerName>).
-        //
-        // This is a targeting dry run only for now - reports what would be hit, but doesn't
-        // touch the claim or the world yet. Storm lifecycle (suppression, containment, VFX,
-        // regen) is still to come.
-        private static TextCommandResult OnUnknowingStorm(ICoreServerAPI api, string playerName)
-        {
-            List<LandClaim> claims = api.World.Claims.All
-                .Where(claim => string.Equals(claim.LastKnownOwnerName, playerName, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            if (claims.Count == 0)
-            {
-                return TextCommandResult.Error($"No land claims found for a player last known as '{playerName}'.");
-            }
-
-            HashSet<(int ChunkX, int ChunkZ)> chunks = ClaimChunkMath.GetCoveredChunkColumns(claims);
-
-            return TextCommandResult.Success(
-                $"The Unknowing stirs: {claims.Count} claim(s) for '{playerName}' spanning {chunks.Count} chunk column(s). " +
-                "(Storm not implemented yet - targeting dry run only.)");
+            api.ChatCommands.Create("unknowing-storm-clear")
+                .WithDescription("Debug/testing only: despawns every enemy every tracked storm owns and clears all storm state. Nothing in the real lifecycle calls this.")
+                .RequiresPrivilege(Privilege.controlserver)
+                .HandleWith(_ => stormManager.ClearAllStorms());
         }
     }
 }
