@@ -25,10 +25,17 @@ namespace TheUnknowing
             {
                 foreach (Cuboidi area in claim.Areas)
                 {
-                    int minChunkX = area.Start.X >> 5;
-                    int maxChunkX = area.End.X >> 5;
-                    int minChunkZ = area.Start.Z >> 5;
-                    int maxChunkZ = area.End.Z >> 5;
+                    // MinX/MaxX (not Start.X/End.X) - Cuboidi doesn't guarantee X1 <= X2 or
+                    // Z1 <= Z2 (that's exactly why it has separate Min/Max properties). A claim
+                    // area dragged from its "high" corner to its "low" corner has Start.X > End.X,
+                    // which silently produced zero chunk columns for that area (the loop below
+                    // never runs when minChunkX > maxChunkX) despite the area being real and
+                    // non-empty - confirmed live via a claim whose storm came back with 0 chunk
+                    // columns.
+                    int minChunkX = area.MinX >> 5;
+                    int maxChunkX = area.MaxX >> 5;
+                    int minChunkZ = area.MinZ >> 5;
+                    int maxChunkZ = area.MaxZ >> 5;
 
                     for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++)
                     {

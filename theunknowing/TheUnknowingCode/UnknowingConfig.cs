@@ -37,5 +37,51 @@ namespace TheUnknowing
         // file reached 4 entries, 2 duplicated pairs, after one restart).
         [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public List<string> EnemyEntityCodes { get; set; } = new() { "game:drifter-normal", "game:drifter-deep" };
+
+        // Real-time seconds between fog particle bursts - also the interval the fog tick listener
+        // itself is registered at, same restart-to-retune caveat as EnemySpawnIntervalSeconds.
+        //
+        // Deliberately not reusing the game's own Temporal Stability system for this (an earlier
+        // approach did, by pinning EntityBehaviorTemporalStabilityAffected.OwnStability down) -
+        // confirmed live that got tangled in vanilla's own stability thresholds in ways that
+        // matter for a real server: unavoidable player damage below 12%, and uncontrolled
+        // tier-4 bowtorn spawns below 5%, neither of which was ever part of the intended design.
+        // Spawning our own particles instead means zero coupling to any of that - entirely our
+        // own responsibility to tune, and it can't hurt anyone by surprise.
+        public double FogParticleIntervalSeconds { get; set; } = 2.0;
+
+        // Particles spawned per covered chunk column, each burst. Boundary columns (touching a
+        // chunk outside the storm) get 3x this, so the edge reads as a denser, darker wall
+        // distinct from the interior - "sealed off" rather than uniformly hazy.
+        public float FogParticlesPerColumn { get; set; } = 6f;
+
+        // How high (blocks above ground) boundary columns' falling fog particles spawn from -
+        // the interior stays a fixed +20 (see SpawnFogParticles), but the boundary "stormwall"
+        // needed to read as a proper towering containment wall rather than knee-high mist.
+        public float FogWallHeight { get; set; } = 80f;
+
+        // Multiplier applied to FogParticlesPerColumn for boundary columns only (was a hardcoded
+        // 3x) - bumped up per feedback wanting a denser containment wall.
+        public float FogWallBoundaryMultiplier { get; set; } = 5f;
+
+        // Crimson "ember" particles spawned per column, each burst - color contrast against the
+        // void-black fog/wall, meant to read as active danger rather than plain smoke.
+        public float EmberParticlesPerColumn { get; set; } = 4f;
+
+        // Real-time seconds between ambient dread audio cues - own tick, same restart-to-retune
+        // caveat. Reuses the game's existing Rift sound (game:sounds/effect/rift.ogg - confirmed
+        // live under the "game" domain, same shared-domain quirk as entity codes) rather than
+        // needing new audio assets - it's the closest thematic match already in the game for
+        // "localized temporal wrongness."
+        public double AmbientAudioIntervalSeconds { get; set; } = 15.0;
+
+        // How far (blocks) the ambient audio cue carries from the storm's center.
+        public float AmbientAudioRange { get; set; } = 48f;
+
+        // Real-time seconds for the in-storm fog AmbientModifier to fade fully in or out on
+        // entering/leaving a storm's chunk bounds, rather than snapping on/off - see
+        // TheUnknowingModSystem.OnFogFadeTick. Sent to the client per-transition via
+        // InStormPacket, since the client has no config file of its own to read this from.
+        public float FogFadeSeconds { get; set; } = 2.5f;
     }
 }
