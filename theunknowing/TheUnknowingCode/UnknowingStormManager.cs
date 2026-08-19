@@ -82,8 +82,9 @@ namespace TheUnknowing
             {
                 TargetPlayerName = playerName,
                 StartTotalHours = api.World.Calendar.TotalHours,
-                DurationHours = config.StormDurationHours,
-                Status = UnknowingStormStatus.Active,
+                GatheringStrengthDurationHours = config.GatheringStrengthDurationHours,
+                EnteringRealityDurationHours = config.EnteringRealityDurationHours,
+                Status = UnknowingStormStatus.GatheringStrength,
                 ChunkColumns = columns.Select(c => new ChunkColumn(c.ChunkX, c.ChunkZ)).ToList()
             };
 
@@ -103,7 +104,8 @@ namespace TheUnknowing
             return TextCommandResult.Success(
                 $"The Unknowing descends: {claims.Count} claim(s) for '{playerName}' erased, " +
                 $"{storm.ChunkColumns.Count} chunk column(s) now open to loot and monsters. " +
-                $"Active for {storm.DurationHours:0} in-game hour(s).");
+                $"Gathering strength for {storm.GatheringStrengthDurationHours:0}h, then entering reality for " +
+                $"{storm.EnteringRealityDurationHours:0}h before it collapses.");
         }
 
         // Self-healing: ensures every column of every non-Done storm has a live landmark entity
@@ -173,6 +175,14 @@ namespace TheUnknowing
                 EnumChatType.Notification, null);
         }
 
+        // Shared by the phase-transition broadcasts below - same "whole server should know"
+        // reasoning as BroadcastStormUnleashed, no waypoint link needed since one was already
+        // dropped when the storm started.
+        private void BroadcastStormPhase(string message)
+        {
+            api.BroadcastMessageToAllGroups($"<strong>The Unknowing</strong> {message}", EnumChatType.Notification, null);
+        }
+
         // Registered on a real-time tick by TheUnknowingModSystem. Handles the Active ->
         // Collapsing transition (Collapsing itself is currently a dead end - no regen wired up
         // yet; see ROADMAP 0.4) and containment - keeping every storm-owned entity inside the
@@ -184,10 +194,22 @@ namespace TheUnknowing
 
             foreach (UnknowingStorm storm in storms)
             {
-                if (storm.Status == UnknowingStormStatus.Active && nowHours - storm.StartTotalHours >= storm.DurationHours)
+                double elapsedHours = nowHours - storm.StartTotalHours;
+
+                if (storm.Status == UnknowingStormStatus.GatheringStrength &&
+                    elapsedHours >= storm.GatheringStrengthDurationHours)
+                {
+                    storm.Status = UnknowingStormStatus.EnteringReality;
+                    api.World.Logger.Notification($"[TheUnknowing] Storm over '{storm.TargetPlayerName}' is entering reality.");
+                    BroadcastStormPhase($"tightens its grip over what was once '{storm.TargetPlayerName}''s ground - the horrors within grow stronger.");
+                    changed = true;
+                }
+                else if (storm.Status == UnknowingStormStatus.EnteringReality &&
+                    elapsedHours >= storm.GatheringStrengthDurationHours + storm.EnteringRealityDurationHours)
                 {
                     storm.Status = UnknowingStormStatus.Collapsing;
                     api.World.Logger.Notification($"[TheUnknowing] Storm over '{storm.TargetPlayerName}' is collapsing (duration elapsed).");
+                    BroadcastStormPhase($"begins to collapse over what was once '{storm.TargetPlayerName}''s ground - its hold is finally breaking.");
                     changed = true;
                 }
 
@@ -255,9 +277,13 @@ namespace TheUnknowing
             {
                 if (storm.Status == UnknowingStormStatus.Done) continue;
 
+                float particlesPerColumn = storm.Status == UnknowingStormStatus.EnteringReality
+                    ? config.EmberParticlesPerColumn * config.EnteringIntensityMultiplier
+                    : config.EmberParticlesPerColumn;
+
                 foreach (ChunkColumn column in storm.ChunkColumns)
                 {
-                    SpawnEmberParticles(column, GetColumnGroundY(column));
+                    SpawnEmberParticles(column, GetColumnGroundY(column), particlesPerColumn);
                 }
             }
         }
@@ -277,7 +303,7 @@ namespace TheUnknowing
         // void-black plus quick, erratic motion is meant to sell "dangerous energy," not just
         // "hazy." Liked live - specifically called out as reading well against the cloud, the
         // purple-against-void contrast selling a "cosmic destruction" feel.
-        private void SpawnEmberParticles(ChunkColumn column, int groundY)
+        private void SpawnEmberParticles(ChunkColumn column, int groundY, float particlesPerColumn)
         {
             double minX = column.ChunkX * ClaimChunkMath.ChunkSize;
             double minZ = column.ChunkZ * ClaimChunkMath.ChunkSize;
@@ -290,7 +316,7 @@ namespace TheUnknowing
             Vec3f maxVelocity = new Vec3f(0.06f, 0.1f, 0.06f);
             int color = ColorUtil.ColorFromRgba(180, 20, 90, 200);
 
-            api.World.SpawnParticles(config.EmberParticlesPerColumn, color, minPos, maxPos, minVelocity, maxVelocity,
+            api.World.SpawnParticles(particlesPerColumn, color, minPos, maxPos, minVelocity, maxVelocity,
                 lifeLength: 3f, gravityEffect: 0f, scale: 0.4f, EnumParticleModel.Quad, dualCallByPlayer: null);
         }
 
@@ -351,14 +377,16 @@ namespace TheUnknowing
         }
 
         // Registered on its own real-time tick by TheUnknowingModSystem, at
-        // config.EnemySpawnIntervalSeconds. One spawn attempt per Active storm per tick.
+        // config.EnemySpawnIntervalSeconds. One spawn attempt per GatheringStrength/EnteringReality
+        // storm per tick - Collapsing is wind-down, no new spawns.
         public void OnSpawnTick()
         {
             bool changed = false;
 
             foreach (UnknowingStorm storm in storms)
             {
-                if (storm.Status != UnknowingStormStatus.Active) continue;
+                if (storm.Status != UnknowingStormStatus.GatheringStrength &&
+                    storm.Status != UnknowingStormStatus.EnteringReality) continue;
 
                 // Prune dead/despawned entities first so the cap reflects what's actually alive,
                 // not a lifetime spawn count.
@@ -366,10 +394,14 @@ namespace TheUnknowing
                 storm.SpawnedEntityIds.RemoveAll(id => api.World.GetEntityById(id) == null);
                 if (storm.SpawnedEntityIds.Count != before) changed = true;
 
-                if (storm.SpawnedEntityIds.Count >= config.MaxConcurrentEnemies) continue;
-                if (storm.ChunkColumns.Count == 0 || config.EnemyEntityCodes.Count == 0) continue;
+                bool entering = storm.Status == UnknowingStormStatus.EnteringReality;
+                int cap = entering ? (int)(config.MaxConcurrentEnemies * config.EnteringIntensityMultiplier) : config.MaxConcurrentEnemies;
+                List<string> pool = entering ? config.EnteringEnemyEntityCodes : config.EnemyEntityCodes;
 
-                if (TrySpawnOne(storm))
+                if (storm.SpawnedEntityIds.Count >= cap) continue;
+                if (storm.ChunkColumns.Count == 0 || pool.Count == 0) continue;
+
+                if (TrySpawnOne(storm, pool))
                 {
                     changed = true;
                 }
@@ -378,18 +410,18 @@ namespace TheUnknowing
             if (changed) Persist();
         }
 
-        private bool TrySpawnOne(UnknowingStorm storm)
+        private bool TrySpawnOne(UnknowingStorm storm, List<string> pool)
         {
             ChunkColumn column = storm.ChunkColumns[api.World.Rand.Next(storm.ChunkColumns.Count)];
             int blockX = column.ChunkX * ClaimChunkMath.ChunkSize + api.World.Rand.Next(ClaimChunkMath.ChunkSize);
             int blockZ = column.ChunkZ * ClaimChunkMath.ChunkSize + api.World.Rand.Next(ClaimChunkMath.ChunkSize);
             int groundY = api.World.BlockAccessor.GetTerrainMapheightAt(new BlockPos(blockX, 0, blockZ));
 
-            string entityCode = config.EnemyEntityCodes[api.World.Rand.Next(config.EnemyEntityCodes.Count)];
+            string entityCode = pool[api.World.Rand.Next(pool.Count)];
             EntityProperties? entityType = api.World.GetEntityType(new AssetLocation(entityCode));
             if (entityType == null)
             {
-                api.World.Logger.Warning($"[TheUnknowing] EnemyEntityCodes has unknown entity code '{entityCode}', skipping spawn.");
+                api.World.Logger.Warning($"[TheUnknowing] enemy pool has unknown entity code '{entityCode}', skipping spawn.");
                 return false;
             }
 
@@ -402,22 +434,40 @@ namespace TheUnknowing
         }
 
         // Debug/testing-only utility - despawns every entity every tracked storm owns and clears
-        // all storm state, regardless of status. Nothing in the real lifecycle calls this; it
-        // exists because storms currently never end on their own (Collapsing is still a dead
-        // end), so without this, every storm ever created in a test world keeps spawning forever.
+        // all storm state. Nothing in the real lifecycle calls this; it exists because storms
+        // currently never end on their own (Collapsing is still a dead end), so without this,
+        // every storm ever created in a test world keeps spawning forever.
+        //
+        // Confirmed live: IWorldAccessor.GetEntityById only finds entities in currently-loaded
+        // chunks - running this command from outside a storm's chunk footprint (e.g. "standing
+        // near, not within the chunks") gets a null back for any entity in an unloaded chunk, not
+        // proof it's already gone. The old version discarded storms.Clear()'d every storm's
+        // tracking regardless, silently orphaning any such entity - un-despawned and now
+        // un-trackable, since the record pointing at it was just wiped. Fix: force every storm
+        // Done immediately (stops spawning/fog/cloud self-healing even for entities we can't
+        // resolve yet), but only actually forget a storm once every entity it owned is confirmed
+        // despawned - anything unresolved stays tracked so a rerun closer to the site finishes
+        // the job instead of losing it.
         public TextCommandResult ClearAllStorms()
         {
-            int stormCount = storms.Count;
             int entityCount = 0;
+            int unresolvedCount = 0;
 
             foreach (UnknowingStorm storm in storms)
             {
-                foreach (long entityId in storm.SpawnedEntityIds)
+                storm.Status = UnknowingStormStatus.Done;
+
+                for (int i = storm.SpawnedEntityIds.Count - 1; i >= 0; i--)
                 {
-                    Entity? entity = api.World.GetEntityById(entityId);
-                    if (entity == null) continue;
+                    Entity? entity = api.World.GetEntityById(storm.SpawnedEntityIds[i]);
+                    if (entity == null)
+                    {
+                        unresolvedCount++;
+                        continue;
+                    }
 
                     api.World.DespawnEntity(entity, new EntityDespawnData { Reason = EnumDespawnReason.Removed });
+                    storm.SpawnedEntityIds.RemoveAt(i);
                     entityCount++;
                 }
 
@@ -426,17 +476,33 @@ namespace TheUnknowing
                     if (column.CloudEntityId == 0) continue;
 
                     Entity? cloudEntity = api.World.GetEntityById(column.CloudEntityId);
-                    if (cloudEntity == null) continue;
+                    if (cloudEntity == null)
+                    {
+                        unresolvedCount++;
+                        continue;
+                    }
 
                     api.World.DespawnEntity(cloudEntity, new EntityDespawnData { Reason = EnumDespawnReason.Removed });
+                    column.CloudEntityId = 0;
                     entityCount++;
                 }
             }
 
-            storms.Clear();
+            if (unresolvedCount > 0)
+            {
+                api.World.Logger.Notification($"[TheUnknowing] ClearAllStorms: {unresolvedCount} entity/entities not found (likely unloaded chunks), left tracked for a rerun.");
+            }
+
+            int before = storms.Count;
+            storms.RemoveAll(storm => storm.SpawnedEntityIds.Count == 0 && storm.ChunkColumns.All(c => c.CloudEntityId == 0));
+            int stormCount = before - storms.Count;
+
             Persist();
 
-            return TextCommandResult.Success($"Cleared {stormCount} storm(s), despawned {entityCount} tracked entity/entities.");
+            string note = unresolvedCount > 0
+                ? $" {unresolvedCount} entit{(unresolvedCount == 1 ? "y" : "ies")} couldn't be found (likely in an unloaded chunk) - move closer to the storm site and rerun to finish clearing."
+                : "";
+            return TextCommandResult.Success($"Cleared {stormCount} storm(s), despawned {entityCount} tracked entity/entities.{note}");
         }
 
         // Debug/testing-only utility - despawns every column's current cloud entity and resets
@@ -445,9 +511,16 @@ namespace TheUnknowing
         // type currently looks like. Exists for iterating on the shape/texture without needing a
         // new land claim each time - a shape/geometry change might not be reflected on an
         // already-spawned entity instance, only a freshly spawned one.
+        //
+        // Only resets CloudEntityId when the despawn is actually confirmed - GetEntityById
+        // returning null means "not currently loaded," not "definitely gone" (see ClearAllStorms).
+        // Resetting unconditionally on a null result orphans the still-standing entity (its old ID
+        // forgotten) while EnsureCloudsSpawned spawns a fresh one right next to it - almost
+        // certainly the real explanation for the earlier "stacked clouds" bug, not pure z-fighting.
         public TextCommandResult RespawnClouds()
         {
             int despawned = 0;
+            int unresolved = 0;
 
             foreach (UnknowingStorm storm in storms)
             {
@@ -456,19 +529,58 @@ namespace TheUnknowing
                     if (column.CloudEntityId == 0) continue;
 
                     Entity? cloudEntity = api.World.GetEntityById(column.CloudEntityId);
-                    if (cloudEntity != null)
+                    if (cloudEntity == null)
                     {
-                        api.World.DespawnEntity(cloudEntity, new EntityDespawnData { Reason = EnumDespawnReason.Removed });
-                        despawned++;
+                        unresolved++;
+                        continue;
                     }
 
+                    api.World.DespawnEntity(cloudEntity, new EntityDespawnData { Reason = EnumDespawnReason.Removed });
+                    despawned++;
                     column.CloudEntityId = 0;
                 }
             }
 
             Persist();
 
-            return TextCommandResult.Success($"Despawned {despawned} cloud(s); fresh ones will spawn within the next game tick.");
+            string note = unresolved > 0
+                ? $" {unresolved} cloud(s) couldn't be found (likely in an unloaded chunk) - move closer and rerun to catch them."
+                : "";
+            return TextCommandResult.Success($"Despawned {despawned} cloud(s); fresh ones will spawn within the next game tick.{note}");
+        }
+
+        // Debug/testing-only utility - despawns any theunknowing:stormcloud entity within range of
+        // the given position that isn't currently owned by a tracked storm. Exists specifically to
+        // clean up clouds orphaned by the old ClearAllStorms/RespawnClouds bug (entities sitting in
+        // a chunk that wasn't loaded when those commands ran, whose tracking got discarded anyway)
+        // - both are fixed now to never discard tracking without a confirmed despawn, but this is
+        // still useful as a general "find and remove a stray by eye" tool. Skips anything still
+        // referenced by a storm's CloudEntityId so it can't accidentally kill an active storm's
+        // landmark out from under it.
+        public TextCommandResult KillNearbyClouds(Vec3d position, double range)
+        {
+            HashSet<long> trackedIds = storms
+                .SelectMany(s => s.ChunkColumns)
+                .Where(c => c.CloudEntityId != 0)
+                .Select(c => c.CloudEntityId)
+                .ToHashSet();
+
+            Entity[] nearby = api.World.GetEntitiesAround(position, (float)range, (float)range,
+                e => e.Code.Domain == "theunknowing" && e.Code.Path == "stormcloud");
+
+            int killed = 0;
+            foreach (Entity entity in nearby)
+            {
+                if (trackedIds.Contains(entity.EntityId)) continue;
+
+                api.World.DespawnEntity(entity, new EntityDespawnData { Reason = EnumDespawnReason.Removed });
+                killed++;
+            }
+
+            int stillTracked = nearby.Length - killed;
+            return TextCommandResult.Success(
+                $"Despawned {killed} untracked stormcloud entity/entities within {range:0} blocks" +
+                (stillTracked > 0 ? $" ({stillTracked} nearby left alone - still owned by a tracked storm)." : "."));
         }
 
         // Debug/testing-only utility - dumps every tracked storm's raw state so overlapping or
@@ -485,7 +597,8 @@ namespace TheUnknowing
                 $"[{i}] target='{storm.TargetPlayerName}' status={storm.Status} " +
                 $"columns={storm.ChunkColumns.Count} spawnedEntities={storm.SpawnedEntityIds.Count} " +
                 $"cloudsSpawned={storm.ChunkColumns.Count(c => c.CloudEntityId != 0)}/{storm.ChunkColumns.Count} " +
-                $"startHour={storm.StartTotalHours:0.0} durationHours={storm.DurationHours:0.0}");
+                $"startHour={storm.StartTotalHours:0.0} gatheringHours={storm.GatheringStrengthDurationHours:0.0} " +
+                $"enteringHours={storm.EnteringRealityDurationHours:0.0}");
 
             return TextCommandResult.Success($"{storms.Count} tracked storm(s):\n" + string.Join("\n", lines));
         }

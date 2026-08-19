@@ -3,15 +3,25 @@ using ProtoBuf;
 
 namespace TheUnknowing
 {
+    // Explicitly numbered - protobuf-net serializes enums by ordinal, so a saved storm's Status
+    // is really just this int. Renumbering or reordering these would silently reinterpret every
+    // already-persisted storm as the wrong phase on next load; clear test storms
+    // (/unknowing-storm-clear) before deploying any future change to this enum.
     public enum UnknowingStormStatus
     {
-        Active,
-        Collapsing,
+        // Storm has just been unleashed - baseline enemy pressure and ember density.
+        GatheringStrength = 0,
+
+        // Escalation phase - same mechanics as GatheringStrength, scaled up by
+        // UnknowingConfig.EnteringIntensityMultiplier (enemy cap, ember density).
+        EnteringReality = 1,
+
+        Collapsing = 2,
 
         // Terminal state - reached once Collapsing has finished doing its work (stopping
         // spawns, running the wind-down VFX, triggering /wgen regen). Not acted on yet;
         // Collapsing currently has no exit.
-        Done
+        Done = 3
     }
 
     // Everything needed to persist an in-progress storm across a server restart, via
@@ -30,11 +40,18 @@ namespace TheUnknowing
         [ProtoMember(2)]
         public double StartTotalHours { get; set; }
 
-        [ProtoMember(3)]
-        public double DurationHours { get; set; }
+        // Snapshotted from config at storm creation (like StartTotalHours) rather than read live
+        // from UnknowingConfig on every tick, so a config change doesn't retroactively alter a
+        // storm already in progress. Field 3 (the old single DurationHours) intentionally left
+        // unused rather than reused, per protobuf-net convention - see UnknowingStormStatus.
+        [ProtoMember(7)]
+        public double GatheringStrengthDurationHours { get; set; }
+
+        [ProtoMember(8)]
+        public double EnteringRealityDurationHours { get; set; }
 
         [ProtoMember(4)]
-        public UnknowingStormStatus Status { get; set; } = UnknowingStormStatus.Active;
+        public UnknowingStormStatus Status { get; set; } = UnknowingStormStatus.GatheringStrength;
 
         [ProtoMember(5)]
         public List<ChunkColumn> ChunkColumns { get; set; } = new();
