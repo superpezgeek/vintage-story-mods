@@ -1,0 +1,16 @@
+{
+	"code": "stormcloud",
+	"class": "EntityAgent",
+	"tags": ["inanimate"],
+	"hitboxSize": { "x": 12, "y": 320, "z": 12 },
+	"client": {
+		"renderer": "Shape",
+		"shape": { "base": "entity/stormcloud" },
+		"behaviors": [
+			{ "code": "interpolateposition" }
+		]
+	},
+	"server": {
+		"behaviors": []
+	}
+}

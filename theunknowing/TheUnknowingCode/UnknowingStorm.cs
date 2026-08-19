@@ -55,6 +55,16 @@ namespace TheUnknowing
         [ProtoMember(2)]
         public int ChunkZ { get; set; }
 
+        // The landmark entity (theunknowing:stormcloud) spawned for this column - a static,
+        // tall translucent column meant to be visible from far outside the storm (unlike the
+        // particle effects, which only read up close). One per column rather than one per storm,
+        // so the landmark is visible across the whole storm's footprint, not just its center.
+        // Not subject to MaxConcurrentEnemies or containment despawn-on-wander - only
+        // UnknowingStormManager.EnsureCloudsSpawned (self-healing, runs on OnGameTick) and
+        // ClearAllStorms touch this. 0 = not yet spawned.
+        [ProtoMember(3)]
+        public long CloudEntityId { get; set; }
+
         public ChunkColumn() { }
 
         public ChunkColumn(int chunkX, int chunkZ)

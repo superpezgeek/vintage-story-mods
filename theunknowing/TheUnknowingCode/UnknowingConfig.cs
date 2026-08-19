@@ -50,22 +50,8 @@ namespace TheUnknowing
         // own responsibility to tune, and it can't hurt anyone by surprise.
         public double FogParticleIntervalSeconds { get; set; } = 2.0;
 
-        // Particles spawned per covered chunk column, each burst. Boundary columns (touching a
-        // chunk outside the storm) get 3x this, so the edge reads as a denser, darker wall
-        // distinct from the interior - "sealed off" rather than uniformly hazy.
-        public float FogParticlesPerColumn { get; set; } = 6f;
-
-        // How high (blocks above ground) boundary columns' falling fog particles spawn from -
-        // the interior stays a fixed +20 (see SpawnFogParticles), but the boundary "stormwall"
-        // needed to read as a proper towering containment wall rather than knee-high mist.
-        public float FogWallHeight { get; set; } = 80f;
-
-        // Multiplier applied to FogParticlesPerColumn for boundary columns only (was a hardcoded
-        // 3x) - bumped up per feedback wanting a denser containment wall.
-        public float FogWallBoundaryMultiplier { get; set; } = 5f;
-
         // Crimson "ember" particles spawned per column, each burst - color contrast against the
-        // void-black fog/wall, meant to read as active danger rather than plain smoke.
+        // stormcloud entity's void-black, meant to read as active danger rather than plain smoke.
         public float EmberParticlesPerColumn { get; set; } = 4f;
 
         // Real-time seconds between ambient dread audio cues - own tick, same restart-to-retune
