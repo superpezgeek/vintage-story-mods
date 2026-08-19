@@ -8,8 +8,17 @@ namespace TheUnknowing
     // introduces belongs here, not as a hardcoded constant.
     public class UnknowingConfig
     {
-        // How long an Unknowing Storm stays Active before it starts Collapsing.
-        public double StormDurationHours { get; set; } = 48.0;
+        // How long a storm spends in each escalating phase before advancing to the next -
+        // GatheringStrength (baseline pressure) then EnteringReality (scaled up by
+        // EnteringIntensityMultiplier below) before finally Collapsing. Total default matches the
+        // old flat 48h StormDurationHours this replaced.
+        public double GatheringStrengthDurationHours { get; set; } = 24.0;
+        public double EnteringRealityDurationHours { get; set; } = 24.0;
+
+        // Multiplies MaxConcurrentEnemies and EmberParticlesPerColumn while a storm is in the
+        // EnteringReality phase - the one dial for "this feels stronger now" rather than a whole
+        // second set of phase-specific configs to tune separately.
+        public float EnteringIntensityMultiplier { get; set; } = 2f;
 
         // Real-time seconds between spawn attempts per storm - also the interval the spawn tick
         // listener itself is registered at (TheUnknowingModSystem), not just a threshold checked
@@ -22,9 +31,9 @@ namespace TheUnknowing
         public int MaxConcurrentEnemies { get; set; } = 6;
 
         // Reuses the game's existing Drifter (the same creature vanilla Temporal Storms spawn)
-        // rather than a custom entity - deliberately excludes the stronger tainted/corrupt/
-        // nightmare/double-headed variants for now, this is meant to be a nuisance/threat over an
-        // abandoned base, not something that needs to punch above a normal storm.
+        // rather than a custom entity - the normal/deep variants, meant to be a nuisance/threat
+        // over an abandoned base during GatheringStrength. See EnteringEnemyEntityCodes below for
+        // the stronger variants used once a storm progresses to EnteringReality.
         //
         // Domain is "game", not "survival" - despite the JSON living under assets/survival/,
         // confirmed live that entity type codes for the built-in survival/creative content are
@@ -37,6 +46,16 @@ namespace TheUnknowing
         // file reached 4 entries, 2 duplicated pairs, after one restart).
         [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public List<string> EnemyEntityCodes { get; set; } = new() { "game:drifter-normal", "game:drifter-deep" };
+
+        // Enemy pool used instead of (not in addition to) EnemyEntityCodes once a storm reaches
+        // EnteringReality - the stronger drifter variants deliberately excluded from the base
+        // pool (game:drifter-{tainted,corrupt,nightmare,double-headed}, same "game" domain quirk
+        // as above), so the escalation is a real pool swap, not just more of the same enemy.
+        [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+        public List<string> EnteringEnemyEntityCodes { get; set; } = new()
+        {
+            "game:drifter-tainted", "game:drifter-corrupt", "game:drifter-nightmare", "game:drifter-double-headed"
+        };
 
         // Real-time seconds between fog particle bursts - also the interval the fog tick listener
         // itself is registered at, same restart-to-retune caveat as EnemySpawnIntervalSeconds.

@@ -91,6 +91,64 @@ so far.
       from every prior test session was still alive and still spawning;
       confirmed live catching 3 leftover storms / 9 entities from
       earlier sessions in one shot.
+- [x] Two-phase escalation replacing the old flat `Active` status:
+      `GatheringStrength -> EnteringReality -> Collapsing -> Done`.
+      Considered a third opening phase ("Gaining Foothold"/"The
+      Thinning") but decided against it - the mod's actual purpose is a
+      pacing tool for admins to regenerate abandoned land, not a
+      narrative engine, so kept it to the two phases that actually
+      matter. `StormDurationHours` split into
+      `GatheringStrengthDurationHours`/`EnteringRealityDurationHours`
+      (still snapshotted onto the storm at creation, not read live, so
+      a config change never retroactively alters a storm already in
+      progress). `EnteringReality` scales `MaxConcurrentEnemies` and
+      `EmberParticlesPerColumn` by a new `EnteringIntensityMultiplier`
+      (default 2x) rather than a second full set of phase-specific
+      configs. `EnteringReality` also swaps enemy pools entirely - a new
+      `EnteringEnemyEntityCodes` (default the stronger drifter variants
+      deliberately excluded from the base pool since 0.2: tainted,
+      corrupt, nightmare, double-headed) replaces `EnemyEntityCodes`
+      rather than adding to it, so the escalation is a real threat
+      upgrade, not just more of the same enemy. `UnknowingStormStatus`
+      is now explicitly numbered, since
+      protobuf-net serializes enums by ordinal and inserting/reordering
+      values would silently reinterpret already-persisted storms as the
+      wrong phase - any future change to this enum needs a
+      `/unknowing-storm-clear` before redeploying.
+      Confirmed live via `server-main.log`: shortened both phase
+      durations to 1h each for testing and watched a real storm
+      transition on schedule - `GatheringStrength -> EnteringReality`
+      and `EnteringReality -> Collapsing` both fired within seconds of
+      the expected in-game-hours-to-real-time math (2 real min/in-game
+      hour at this world's default calendar speed). `BroadcastStormPhase`
+      added so both transitions get the same server-wide chat
+      notification treatment as the original storm-start message
+      (`BroadcastStormUnleashed`), not just a server-log line - players
+      have no other way to know the threat just escalated.
+- [x] Real bug found and fixed live, right after deploying the above:
+      ran `/unknowing-storm-clear` to reset for testing (per the note
+      above) while standing near a storm's chunks but not inside them.
+      Log showed `despawned 4 tracked entity/entities` and 1 storm
+      cleared - but the cloud entities were still standing afterward,
+      and a second run immediately after reported 0 storms/0 entities
+      (nothing left to even search). Root cause: `GetEntityById` only
+      finds entities in currently-loaded chunks, and both
+      `ClearAllStorms` and `RespawnClouds` discarded their tracking
+      unconditionally regardless of whether a `null` back meant "gone"
+      or just "not loaded right now" - so any cloud in an unloaded
+      chunk got silently orphaned, un-despawned and now un-trackable
+      since the record pointing at it was wiped anyway. Very likely
+      the real explanation for the earlier "stacked clouds" bug
+      (0.3/reversal) too, not pure z-fighting. Fixed both commands to
+      only drop tracking once a despawn is actually confirmed -
+      `ClearAllStorms` now marks a storm `Done` immediately (stops
+      spawning/fog/self-healing) but keeps any unresolved entity IDs
+      tracked for a rerun instead of forgetting them.
+      Added `/unknowing-storm-kill-nearby [range]` to clean up clouds
+      already orphaned by the old behavior (or any other stray found
+      by eye) - despawns any `theunknowing:stormcloud` entity in range
+      of the caller that isn't currently owned by a tracked storm, so
+      it can't accidentally kill an active storm's landmark.
 
 ## 0.3 — presentation
 
@@ -369,7 +427,19 @@ so far.
 - [ ] Cloud entity expansion animation (grows over time, similar to
       what the old particle-based beacon did via
       `SmokeColumnRadiusMin`/`Max` before it was removed - see 0.3).
-- [ ] Darker cloud entity (texture alpha tune - currently ~90/255).
+- [ ] Darker cloud entity (texture alpha tune - currently ~90/255) - OR
+      as an alternative worth trying first, a starfield texture instead
+      of solid void-black: white star-dots on a dark background, same
+      shape/renderPass, just a new PNG. Noted live that the "tear in
+      reality" read kind of already works with how the cloud currently
+      renders, so this might get further toward that than just going
+      darker would. A literal see-through hole to the real sky behind
+      it (rather than a starfield pattern painted on the surface) was
+      also discussed and deliberately ruled out - would need render-to-
+      texture/portal tricks the shape+texture system doesn't expose,
+      same "reads as a picture, not a real gap" lesson already learned
+      from the smoke-column mesh attempt (0.3/reversal) - not worth the
+      engine-level effort it'd take.
 - [ ] More erratic ember particle motion.
 - [ ] New ambient audio - currently still reusing the game's own
       `game:sounds/effect/rift.ogg`, never replaced with something

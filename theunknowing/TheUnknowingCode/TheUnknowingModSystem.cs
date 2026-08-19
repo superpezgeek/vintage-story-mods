@@ -55,6 +55,12 @@ namespace TheUnknowing
                 .WithDescription("Debug/testing only: lists every tracked storm's target, status, chunk column count, and spawned entity count - use to check for stale/overlapping storms left over from earlier testing.")
                 .RequiresPrivilege(Privilege.controlserver)
                 .HandleWith(_ => stormManager.DumpStormStatus());
+
+            api.ChatCommands.Create("unknowing-storm-kill-nearby")
+                .WithDescription("Debug/testing only: despawns any stormcloud entity within range of the caller that isn't currently owned by a tracked storm - for cleaning up orphaned clouds (e.g. left behind by a chunk that wasn't loaded when /unknowing-storm-clear or /unknowing-storm-respawn-clouds ran).")
+                .RequiresPrivilege(Privilege.controlserver)
+                .WithArgs(api.ChatCommands.Parsers.OptionalDouble("range", 64))
+                .HandleWith(args => stormManager.KillNearbyClouds(args.Caller.Pos, (double)args[0]));
         }
 
         // First client-side code this mod has - everything else is server-authoritative. Needed
