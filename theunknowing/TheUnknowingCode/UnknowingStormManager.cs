@@ -95,12 +95,65 @@ namespace TheUnknowing
             double centerZ = centerColumn.ChunkZ * ClaimChunkMath.ChunkSize + ClaimChunkMath.ChunkSize / 2.0;
             int centerGroundY = api.World.BlockAccessor.GetTerrainMapheightAt(new BlockPos((int)centerX, 0, (int)centerZ));
 
+            // Cloud entities aren't spawned here - EnsureCloudsSpawned (called from OnGameTick)
+            // picks up every column with CloudEntityId == 0 within one game tick of this storm
+            // existing, new or old. One spawn path instead of two.
             BroadcastStormUnleashed(playerName, centerX, centerGroundY, centerZ);
 
             return TextCommandResult.Success(
                 $"The Unknowing descends: {claims.Count} claim(s) for '{playerName}' erased, " +
                 $"{storm.ChunkColumns.Count} chunk column(s) now open to loot and monsters. " +
                 $"Active for {storm.DurationHours:0} in-game hour(s).");
+        }
+
+        // Self-healing: ensures every column of every non-Done storm has a live landmark entity
+        // (theunknowing:stormcloud) - a static, tall translucent column meant to solve what
+        // particles alone couldn't, something visible from well outside the storm regardless of
+        // what's built nearby. Unlike the removed particle-based smoke beacon (see ROADMAP
+        // 0.3/reversal), this is a real world object, so it isn't subject to the client's shared
+        // particle render budget (confirmed live that budget gets contended by weather - see
+        // GOTCHAS.md). Called from OnGameTick rather than only at storm creation, so a storm that
+        // existed before this feature shipped (or a cloud that's despawned/failed to load for any
+        // reason) gets one within one tick instead of needing a brand new storm.
+        private void EnsureCloudsSpawned(UnknowingStorm storm)
+        {
+            bool changed = false;
+
+            foreach (ChunkColumn column in storm.ChunkColumns)
+            {
+                if (column.CloudEntityId != 0 && api.World.GetEntityById(column.CloudEntityId) != null) continue;
+
+                EntityProperties? cloudType = api.World.GetEntityType(new AssetLocation("theunknowing", "stormcloud"));
+                if (cloudType == null)
+                {
+                    api.World.Logger.Warning("[TheUnknowing] stormcloud entity type not found, skipping cloud spawn.");
+                    return;
+                }
+
+                int groundY = GetColumnGroundY(column);
+
+                // Confirmed live: on the very first OnGameTick after a fresh server boot, the
+                // relevant chunk can still be mid-load, and GetTerrainMapheightAt returns 0 before
+                // real terrain exists - anchoring a cloud there forever, since this method only
+                // checks whether the tracked entity still *exists*, never whether its position
+                // still makes sense. A cloud spawned at world Y=0 then sits there uncorrected
+                // across every subsequent restart. Skip and retry next tick instead of spawning
+                // against an obviously-not-ready height; no real claim in this mod is ever
+                // legitimately at Y=0.
+                if (groundY <= 0) continue;
+
+                double x = column.ChunkX * ClaimChunkMath.ChunkSize + ClaimChunkMath.ChunkSize / 2.0;
+                double z = column.ChunkZ * ClaimChunkMath.ChunkSize + ClaimChunkMath.ChunkSize / 2.0;
+
+                Entity cloudEntity = api.ClassRegistry.CreateEntity(cloudType);
+                cloudEntity.Pos.SetPos(x, groundY, z);
+                api.World.SpawnEntity(cloudEntity);
+
+                column.CloudEntityId = cloudEntity.EntityId;
+                changed = true;
+            }
+
+            if (changed) Persist();
         }
 
         // Tells every online player, not just whoever ran the command, the moment a storm goes
@@ -136,6 +189,11 @@ namespace TheUnknowing
                     storm.Status = UnknowingStormStatus.Collapsing;
                     api.World.Logger.Notification($"[TheUnknowing] Storm over '{storm.TargetPlayerName}' is collapsing (duration elapsed).");
                     changed = true;
+                }
+
+                if (storm.Status != UnknowingStormStatus.Done)
+                {
+                    EnsureCloudsSpawned(storm);
                 }
 
                 if (EnforceContainment(storm))
@@ -177,11 +235,18 @@ namespace TheUnknowing
         }
 
         // Registered on its own real-time tick by TheUnknowingModSystem, at
-        // config.FogParticleIntervalSeconds. Spawns void-black particles descending from above
-        // across every covered chunk column of every non-Done storm - fully our own particles, not
-        // reusing the game's Temporal Stability system (an earlier approach did; see
-        // UnknowingConfig for why that was dropped). Not persisted - transient visual effect, not
-        // storm state.
+        // config.FogParticleIntervalSeconds. Spawns ember particles across every covered chunk
+        // column of every non-Done storm. Not persisted - transient visual effect, not storm
+        // state.
+        //
+        // Used to also spawn the void-black "containment wall" fog particles (SpawnFogParticles) -
+        // removed once the stormcloud landmark entity existed to do the "visible from far away"
+        // job instead. The particle wall was a real performance hazard: its density scaled with
+        // chunk-column count, and (confirmed live) it competed with the client's shared particle
+        // render budget under rain badly enough that raising the budget cap 5x didn't fix visible
+        // dropout - only removing rain did. The stormcloud entity has none of that risk (real
+        // world object, not particles - see GOTCHAS.md), so there's no reason to keep paying that
+        // cost just for atmosphere. Interior fog went with it too, on the same reasoning.
         public void OnFogTick()
         {
             if (storms.Count == 0) return;
@@ -190,33 +255,15 @@ namespace TheUnknowing
             {
                 if (storm.Status == UnknowingStormStatus.Done) continue;
 
-                HashSet<(int ChunkX, int ChunkZ)> columnSet = storm.ChunkColumns.Select(c => (c.ChunkX, c.ChunkZ)).ToHashSet();
-
                 foreach (ChunkColumn column in storm.ChunkColumns)
                 {
-                    bool isBoundary = !columnSet.Contains((column.ChunkX - 1, column.ChunkZ))
-                        || !columnSet.Contains((column.ChunkX + 1, column.ChunkZ))
-                        || !columnSet.Contains((column.ChunkX, column.ChunkZ - 1))
-                        || !columnSet.Contains((column.ChunkX, column.ChunkZ + 1));
-
-                    int groundY = GetColumnGroundY(column);
-
-                    // TEMP DIAGNOSTIC (remove once the per-chunk fade/reset issue is root-caused):
-                    // logs every burst issued so the actual server-side spawn cadence per column
-                    // can be read directly from server-main.log instead of inferred from what's
-                    // visible client-side.
-                    api.World.Logger.Notification($"[TheUnknowing] fogburst chunk=({column.ChunkX},{column.ChunkZ}) boundary={isBoundary} groundY={groundY}");
-
-                    SpawnFogParticles(column, isBoundary, groundY);
-                    SpawnEmberParticles(column, groundY);
+                    SpawnEmberParticles(column, GetColumnGroundY(column));
                 }
             }
         }
 
-        // Shared by every per-column fog-tick particle spawn below (SpawnFogParticles,
-        // SpawnEmberParticles) - both want the same column-center terrain height, so it's looked
-        // up once per column per tick here instead of each independently querying the block
-        // accessor for the identical position.
+        // Shared by every per-column fog-tick particle spawn below - column-center terrain
+        // height, looked up once per column per tick.
         private int GetColumnGroundY(ChunkColumn column)
         {
             double minX = column.ChunkX * ClaimChunkMath.ChunkSize;
@@ -224,40 +271,12 @@ namespace TheUnknowing
             return api.World.BlockAccessor.GetTerrainMapheightAt(new BlockPos((int)(minX + ClaimChunkMath.ChunkSize / 2), 0, (int)(minZ + ClaimChunkMath.ChunkSize / 2)));
         }
 
-        // Void-black, semi-transparent quads falling from well above ground down onto a chunk
-        // column's footprint - "inky blackness descending from the heavens" per the original
-        // pitch, not ambient ground-level haze. Boundary columns (touching a chunk outside the
-        // storm) get config.FogWallBoundaryMultiplier the particle count, higher opacity, and
-        // spawn from much higher up (config.FogWallHeight vs the interior's fixed +20), so the
-        // edge reads as a proper towering containment wall rather than knee-high mist, distinct
-        // from the (still dark, just thinner and lower) interior - the "stormwall" quality.
-        // Color/velocity/lifeLength are a first-pass guess, expect these to need retuning once
-        // seen live (same as every other numeric value in this mod so far).
-        private void SpawnFogParticles(ChunkColumn column, bool isBoundary, int groundY)
-        {
-            double minX = column.ChunkX * ClaimChunkMath.ChunkSize;
-            double minZ = column.ChunkZ * ClaimChunkMath.ChunkSize;
-            double maxX = minX + ClaimChunkMath.ChunkSize;
-            double maxZ = minZ + ClaimChunkMath.ChunkSize;
-
-            // Spawns high above the ground, falls down onto it rather than drifting at ground level.
-            float spawnTopHeight = isBoundary ? config.FogWallHeight : 20f;
-            Vec3d minPos = new Vec3d(minX, groundY + 10, minZ);
-            Vec3d maxPos = new Vec3d(maxX, groundY + spawnTopHeight, maxZ);
-            Vec3f minVelocity = new Vec3f(-0.02f, -0.15f, -0.02f);
-            Vec3f maxVelocity = new Vec3f(0.02f, -0.05f, 0.02f);
-
-            float quantity = isBoundary ? config.FogParticlesPerColumn * config.FogWallBoundaryMultiplier : config.FogParticlesPerColumn;
-            int alpha = isBoundary ? 220 : 140;
-            int color = ColorUtil.ColorFromRgba(15, 12, 20, alpha);
-
-            api.World.SpawnParticles(quantity, color, minPos, maxPos, minVelocity, maxVelocity,
-                lifeLength: 10f, gravityEffect: 0.05f, scale: 2f, EnumParticleModel.Quad, dualCallByPlayer: null);
-        }
-
-        // Small, fast, crimson "ember" particles scattered through the storm - the black fog/wall
-        // alone read as smoke, not a threat. Color contrast against the void-black plus quick,
-        // erratic motion is meant to sell "dangerous energy," not just "hazy."
+        // Small, fast "ember" particles scattered through the storm - reads as purple live
+        // (RGB 180,20,90, closer to crimson/raspberry on paper, but that's not how it actually
+        // renders against the dark background). Color contrast against the stormcloud entity's
+        // void-black plus quick, erratic motion is meant to sell "dangerous energy," not just
+        // "hazy." Liked live - specifically called out as reading well against the cloud, the
+        // purple-against-void contrast selling a "cosmic destruction" feel.
         private void SpawnEmberParticles(ChunkColumn column, int groundY)
         {
             double minX = column.ChunkX * ClaimChunkMath.ChunkSize;
@@ -401,12 +420,55 @@ namespace TheUnknowing
                     api.World.DespawnEntity(entity, new EntityDespawnData { Reason = EnumDespawnReason.Removed });
                     entityCount++;
                 }
+
+                foreach (ChunkColumn column in storm.ChunkColumns)
+                {
+                    if (column.CloudEntityId == 0) continue;
+
+                    Entity? cloudEntity = api.World.GetEntityById(column.CloudEntityId);
+                    if (cloudEntity == null) continue;
+
+                    api.World.DespawnEntity(cloudEntity, new EntityDespawnData { Reason = EnumDespawnReason.Removed });
+                    entityCount++;
+                }
             }
 
             storms.Clear();
             Persist();
 
             return TextCommandResult.Success($"Cleared {stormCount} storm(s), despawned {entityCount} tracked entity/entities.");
+        }
+
+        // Debug/testing-only utility - despawns every column's current cloud entity and resets
+        // CloudEntityId to 0, without touching the rest of the storm. EnsureCloudsSpawned (next
+        // OnGameTick, within 10s) then spawns fresh ones against whatever the stormcloud entity
+        // type currently looks like. Exists for iterating on the shape/texture without needing a
+        // new land claim each time - a shape/geometry change might not be reflected on an
+        // already-spawned entity instance, only a freshly spawned one.
+        public TextCommandResult RespawnClouds()
+        {
+            int despawned = 0;
+
+            foreach (UnknowingStorm storm in storms)
+            {
+                foreach (ChunkColumn column in storm.ChunkColumns)
+                {
+                    if (column.CloudEntityId == 0) continue;
+
+                    Entity? cloudEntity = api.World.GetEntityById(column.CloudEntityId);
+                    if (cloudEntity != null)
+                    {
+                        api.World.DespawnEntity(cloudEntity, new EntityDespawnData { Reason = EnumDespawnReason.Removed });
+                        despawned++;
+                    }
+
+                    column.CloudEntityId = 0;
+                }
+            }
+
+            Persist();
+
+            return TextCommandResult.Success($"Despawned {despawned} cloud(s); fresh ones will spawn within the next game tick.");
         }
 
         // Debug/testing-only utility - dumps every tracked storm's raw state so overlapping or
@@ -422,6 +484,7 @@ namespace TheUnknowing
             var lines = storms.Select((storm, i) =>
                 $"[{i}] target='{storm.TargetPlayerName}' status={storm.Status} " +
                 $"columns={storm.ChunkColumns.Count} spawnedEntities={storm.SpawnedEntityIds.Count} " +
+                $"cloudsSpawned={storm.ChunkColumns.Count(c => c.CloudEntityId != 0)}/{storm.ChunkColumns.Count} " +
                 $"startHour={storm.StartTotalHours:0.0} durationHours={storm.DurationHours:0.0}");
 
             return TextCommandResult.Success($"{storms.Count} tracked storm(s):\n" + string.Join("\n", lines));

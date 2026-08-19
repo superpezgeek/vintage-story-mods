@@ -1,0 +1,27 @@
+{
+	"textureWidth": 8,
+	"textureHeight": 8,
+	"textureSizes": {
+		"cloud": [8, 8]
+	},
+	"textures": {
+		"cloud": "entity/stormcloud"
+	},
+	"elements": [
+		{
+			"name": "column",
+			"from": [-96, -48, -96],
+			"to": [96, 5120, 96],
+			"rotationOrigin": [0, 0, 0],
+			"renderPass": 3,
+			"faces": {
+				"north": { "texture": "#cloud", "uv": [0, 0, 8, 8] },
+				"east": { "texture": "#cloud", "uv": [0, 0, 8, 8] },
+				"south": { "texture": "#cloud", "uv": [0, 0, 8, 8] },
+				"west": { "texture": "#cloud", "uv": [0, 0, 8, 8] },
+				"up": { "texture": "#cloud", "uv": [0, 0, 8, 8] },
+				"down": { "texture": "#cloud", "uv": [0, 0, 8, 8], "enabled": false }
+			}
+		}
+	]
+}

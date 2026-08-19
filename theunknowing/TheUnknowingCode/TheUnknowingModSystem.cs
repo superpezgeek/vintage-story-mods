@@ -46,6 +46,11 @@ namespace TheUnknowing
                 .RequiresPrivilege(Privilege.controlserver)
                 .HandleWith(_ => stormManager.ClearAllStorms());
 
+            api.ChatCommands.Create("unknowing-storm-respawn-clouds")
+                .WithDescription("Debug/testing only: despawns every storm's cloud entities and lets them respawn fresh within one game tick - use after changing the stormcloud shape/texture to avoid testing against stale entity instances.")
+                .RequiresPrivilege(Privilege.controlserver)
+                .HandleWith(_ => stormManager.RespawnClouds());
+
             api.ChatCommands.Create("unknowing-storm-status")
                 .WithDescription("Debug/testing only: lists every tracked storm's target, status, chunk column count, and spawned entity count - use to check for stale/overlapping storms left over from earlier testing.")
                 .RequiresPrivilege(Privilege.controlserver)

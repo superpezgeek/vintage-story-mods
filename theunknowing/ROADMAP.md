@@ -348,6 +348,40 @@ so far.
 - [ ] Full lifecycle test: summon on a real claim, let it run, confirm
       the claim area is gone and the land is regenerated clean.
 
+## 0.5 — polish & compatibility
+
+- [ ] ConfigLib support (mods.vintagestory.at/show/mod/9551) - already
+      installed as a dependency for other mods on the server, but
+      `TheUnknowing.json` isn't hooked into it yet.
+- [ ] Faster/separate tick for `UpdatePlayerStormMembership`. Currently
+      runs off the shared 10s `OnGameTick` (same tick as Active ->
+      Collapsing and containment), so `InStormPacket` - and therefore
+      the client-side fog fade - can lag up to ~10s behind a player
+      actually crossing the storm boundary in either direction: leave
+      right after a tick fires and you stay "blinded" for up to 10s
+      after you're already clear; enter right after a tick fires and
+      you go up to 10s without fog before it catches up. Explore
+      splitting membership tracking onto its own faster tick (candidate
+      interval: something closer to `FogParticleIntervalSeconds`, or
+      faster) so the fade starts promptly on the real crossing instead
+      of on the next 10s boundary-check.
+- [ ] Cloud entity spawn animation.
+- [ ] Cloud entity expansion animation (grows over time, similar to
+      what the old particle-based beacon did via
+      `SmokeColumnRadiusMin`/`Max` before it was removed - see 0.3).
+- [ ] Darker cloud entity (texture alpha tune - currently ~90/255).
+- [ ] More erratic ember particle motion.
+- [ ] New ambient audio - currently still reusing the game's own
+      `game:sounds/effect/rift.ogg`, never replaced with something
+      custom.
+- [ ] Test underground claim (does terrain-height-based positioning
+      for the cloud/particles/spawns still make sense if the claim
+      itself is underground?).
+- [ ] Test multiple claims on one player. `ClaimChunkMath.
+      GetCoveredChunkColumns` already unions chunk columns across every
+      claim a player owns, but this has never actually been confirmed
+      live against a player with more than one claim.
+
 ## Ideas (not scheduled)
 
 - **Demo/RP mode** — a separate command (e.g. `/unknowing-storm-demo
