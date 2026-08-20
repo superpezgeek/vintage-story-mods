@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
+using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
@@ -183,14 +184,15 @@ namespace TheUnknowing
             api.BroadcastMessageToAllGroups($"<strong>The Unknowing</strong> {message}", EnumChatType.Notification, null);
         }
 
-        // Registered on a real-time tick by TheUnknowingModSystem. Handles the Active ->
-        // Collapsing transition (Collapsing itself is currently a dead end - no regen wired up
-        // yet; see ROADMAP 0.4) and containment - keeping every storm-owned entity inside the
-        // chunk columns it was summoned over.
+        // Registered on a real-time tick by TheUnknowingModSystem. Handles the GatheringStrength ->
+        // EnteringReality -> Collapsing progression, the actual wgen regen + full cleanup once a
+        // storm reaches Collapsing (see FinishCollapse), and containment - keeping every
+        // storm-owned entity inside the chunk columns it was summoned over.
         public void OnGameTick()
         {
             double nowHours = api.World.Calendar.TotalHours;
             bool changed = false;
+            List<UnknowingStorm> finishedStorms = new();
 
             foreach (UnknowingStorm storm in storms)
             {
@@ -213,6 +215,21 @@ namespace TheUnknowing
                     changed = true;
                 }
 
+                // Checked as its own condition (not just on the transition edge above) so any
+                // storm already sitting in Collapsing - including one that reached that status
+                // before this method existed, like a storm already mid-test on a live server -
+                // gets picked up and finished on the very next tick, not just storms that
+                // transition into it fresh. Nothing calls for a lingering Collapsing phase; only
+                // GatheringStrength/EnteringReality have real durations, so this runs immediately.
+                if (storm.Status == UnknowingStormStatus.Collapsing)
+                {
+                    FinishCollapse(storm);
+                    storm.Status = UnknowingStormStatus.Done;
+                    finishedStorms.Add(storm);
+                    changed = true;
+                    continue;
+                }
+
                 if (storm.Status != UnknowingStormStatus.Done)
                 {
                     EnsureCloudsSpawned(storm);
@@ -224,9 +241,89 @@ namespace TheUnknowing
                 }
             }
 
+            if (finishedStorms.Count > 0)
+            {
+                storms.RemoveAll(finishedStorms.Contains);
+            }
+
             UpdatePlayerStormMembership();
 
             if (changed) Persist();
+        }
+
+        // The actual ROADMAP 0.4 payoff - despawns everything the storm owns and regenerates the
+        // claimed land, then the storm is dropped from tracking entirely (see OnGameTick) since
+        // its whole lifecycle is complete. Doesn't bother with the "only drop tracking once a
+        // despawn is confirmed" caution ClearAllStorms/RespawnClouds now use (see GOTCHAS.md) -
+        // that mattered there because nothing else would ever clean up an unresolved entity once
+        // its tracking was gone. Here, RegenClaimedChunks deletes and regenerates every chunk
+        // column the storm covers regardless of what's currently loaded, which structurally wipes
+        // any entity data left in those chunks (loaded or not) - the despawns below are just for
+        // an immediate visual removal if a player happens to be nearby, not the real cleanup
+        // mechanism.
+        private void FinishCollapse(UnknowingStorm storm)
+        {
+            foreach (long entityId in storm.SpawnedEntityIds)
+            {
+                Entity? entity = api.World.GetEntityById(entityId);
+                if (entity == null) continue;
+                api.World.DespawnEntity(entity, new EntityDespawnData { Reason = EnumDespawnReason.Removed });
+            }
+
+            foreach (ChunkColumn column in storm.ChunkColumns)
+            {
+                if (column.CloudEntityId == 0) continue;
+                Entity? cloudEntity = api.World.GetEntityById(column.CloudEntityId);
+                if (cloudEntity == null) continue;
+                api.World.DespawnEntity(cloudEntity, new EntityDespawnData { Reason = EnumDespawnReason.Removed });
+            }
+
+            RegenClaimedChunks(storm);
+        }
+
+        // Runs /wgen regenrange over the rectangular bounding box of every chunk column the storm
+        // covers, via a synthetic admin-privileged console Caller (same pattern vanilla itself
+        // uses for block/BE-triggered commands - see BEConditional.getCaller in vs-source).
+        //
+        // Deliberately NOT /wgen regen (the radius-around-a-point subcommand the original 0.4 plan
+        // called for) - confirmed by reading WgenCommands.cs that its chunk-range math
+        // (GetCoordsFromRange) keys off Caller.Player.Entity.Pos, not Caller.Pos, and silently
+        // falls back to the world map center if Player is null. A console-style Caller for a
+        // target player who's most likely offline (the mod's entire premise) would hit exactly
+        // that fallback - regenerating terrain around world spawn instead of the claim, with no
+        // error to catch it. /wgen regenrange takes explicit chunk coordinates instead, with no
+        // such fallback, so it's the only safe choice here.
+        //
+        // Uses the min/max bounding rectangle of storm.ChunkColumns rather than looping
+        // regenrange once per exact column - a claim with multiple disjoint Areas could regen a
+        // few extra chunks beyond what was actually claimed, but that's preferable to repeating
+        // regenrange's own "pause chunk gen thread, reload worldgen assets" overhead once per
+        // column, and a slightly wider wipe reads fine thematically ("The Unknowing consumes the
+        // area"). Matches the original plan's own "minimum enclosing radius" approach, just
+        // rectangular instead of circular.
+        private void RegenClaimedChunks(UnknowingStorm storm)
+        {
+            if (storm.ChunkColumns.Count == 0) return;
+
+            int minX = storm.ChunkColumns.Min(c => c.ChunkX);
+            int maxX = storm.ChunkColumns.Max(c => c.ChunkX);
+            int minZ = storm.ChunkColumns.Min(c => c.ChunkZ);
+            int maxZ = storm.ChunkColumns.Max(c => c.ChunkZ);
+
+            var caller = new Caller
+            {
+                Type = EnumCallerType.Console,
+                CallerRole = "admin",
+                CallerPrivileges = new[] { "*" },
+                FromChatGroupId = GlobalConstants.ConsoleGroup
+            };
+
+            string playerName = storm.TargetPlayerName;
+            api.ChatCommands.ExecuteUnparsed(
+                $"/wgen regenrange {minX} {minZ} {maxX} {maxZ}",
+                new TextCommandCallingArgs { Caller = caller },
+                result => api.World.Logger.Notification(
+                    $"[TheUnknowing] wgen regenrange for '{playerName}' ({minX},{minZ})-({maxX},{maxZ}): {result.StatusMessage}"));
         }
 
         // Tells each online player's client whether they're currently inside any storm's chunk
