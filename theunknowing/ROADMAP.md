@@ -399,12 +399,55 @@ so far.
 
 ## 0.4 — regen
 
-- [ ] Wire up the `/wgen regen` call: compute the minimum enclosing
-      radius around the claim's chunk set, construct a `Caller` with
-      `Pos` at the center and `Player = null`, call it via
-      `sapi.ChatCommands.ExecuteUnparsed`.
-- [ ] Full lifecycle test: summon on a real claim, let it run, confirm
+- [x] Wired up the actual regen: once a storm reaches `Collapsing`
+      (checked every tick, not just on the transition edge - so a
+      storm already sitting in `Collapsing` from before this shipped
+      gets picked up and finished too), `FinishCollapse` despawns every
+      mob/cloud the storm owns and calls `RegenClaimedChunks`, then the
+      storm is dropped from tracking entirely (`storms.RemoveAll`) -
+      its lifecycle is complete, nothing left to persist.
+      Real bug caught before it shipped, not live: the original plan
+      here (`/wgen regen <radius>`, `Caller.Pos` at center,
+      `Player = null`) was never actually safe. Reading
+      `WgenCommands.cs` in vs-source showed `regen`'s chunk-centering
+      math (`GetCoordsFromRange`) keys off `Caller.Player.Entity.Pos`,
+      not `Caller.Pos` at all, and silently falls back to the **world
+      map center** if `Player` is null - exactly the case for a
+      console-style `Caller` targeting a player who's most likely
+      offline (the mod's entire premise). That would have regenerated
+      terrain around world spawn instead of the claim, with no error
+      to catch it. Used `/wgen regenrange <xs> <zs> <xe> <ze>` instead -
+      takes explicit chunk coordinates with no such fallback, computed
+      as the min/max bounding rectangle of `storm.ChunkColumns` (a
+      claim with multiple disjoint Areas could regen a few extra chunks
+      beyond what was actually claimed - accepted rather than looping
+      regenrange once per exact column and repeating its own
+      pause/reload overhead per call). See `GOTCHAS.md` in vs-source.
+      The synthetic `Caller` itself (`Type = Console`,
+      `CallerPrivileges = ["*"]`) mirrors vanilla's own pattern for
+      block/BE-triggered commands (`BEConditional.getCaller`).
+- [x] Full lifecycle test: summon on a real claim, let it run, confirm
       the claim area is gone and the land is regenerated clean.
+      First confirmed against a leftover test storm already sitting in
+      `Collapsing` from before this shipped, picked up and finished
+      automatically on the next server boot via the self-healing check
+      in `OnGameTick`. Then confirmed watching the whole progression
+      live in one sitting on a fresh claim/storm, with 1h/1h phase
+      durations for a fast test: `GatheringStrength` (20:18:59) ->
+      `EnteringReality` (20:21:00, +2min matching 1h) -> `Collapsing`
+      (20:23:00, +2min matching 1h) -> `wgen regenrange` fired and
+      completed (20:23:05-06) - every transition landed within seconds
+      of the expected schedule, and the log's own
+      `wgen regenrange for 'superpezgeek' (15919,15979)-(15920,15980):
+      Reloaded landforms and regenerating 4 chunk columns` /
+      `Regen complete` confirmed the regen itself succeeded, matching
+      the 2x2 claim exactly both times.
+- [ ] `[StoryEvent]` log entry (`api.World.Logger.StoryEvent(...)`,
+      like `[StoryEvent] Unknowing destruction...`) at the moment a
+      storm's land is actually wiped (`RegenClaimedChunks`) - for
+      admin/story tracking, same log category vanilla uses for its own
+      major world events. Backlogged, not implemented with the regen
+      wiring above.
 
 ## 0.5 — polish & compatibility
 
