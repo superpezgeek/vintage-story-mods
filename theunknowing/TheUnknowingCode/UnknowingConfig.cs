@@ -88,5 +88,13 @@ namespace TheUnknowing
         // TheUnknowingModSystem.OnFogFadeTick. Sent to the client per-transition via
         // InStormPacket, since the client has no config file of its own to read this from.
         public float FogFadeSeconds { get; set; } = 2.5f;
+
+        // Real-time seconds between player storm-membership checks (UnknowingStormManager.
+        // OnMembershipTick) - deliberately its own fast tick, not the shared 10s OnGameTick, so
+        // InStormPacket (and the client-side fog fade) starts promptly on the real boundary
+        // crossing instead of lagging up to 10s behind it. The check itself is cheap (a chunk-
+        // column lookup per online player, no storm state mutation), so this can safely run much
+        // faster than any of the other tick intervals here.
+        public double StormMembershipIntervalSeconds { get; set; } = 1.0;
     }
 }

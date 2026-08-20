@@ -187,7 +187,8 @@ namespace TheUnknowing
         // Registered on a real-time tick by TheUnknowingModSystem. Handles the GatheringStrength ->
         // EnteringReality -> Collapsing progression, the actual wgen regen + full cleanup once a
         // storm reaches Collapsing (see FinishCollapse), and containment - keeping every
-        // storm-owned entity inside the chunk columns it was summoned over.
+        // storm-owned entity inside the chunk columns it was summoned over. Player storm
+        // membership (fog fade) is NOT handled here - see OnMembershipTick, its own faster tick.
         public void OnGameTick()
         {
             double nowHours = api.World.Calendar.TotalHours;
@@ -245,8 +246,6 @@ namespace TheUnknowing
             {
                 storms.RemoveAll(finishedStorms.Contains);
             }
-
-            UpdatePlayerStormMembership();
 
             if (changed) Persist();
         }
@@ -326,12 +325,20 @@ namespace TheUnknowing
                     $"[TheUnknowing] wgen regenrange for '{playerName}' ({minX},{minZ})-({maxX},{maxZ}): {result.StatusMessage}"));
         }
 
+        // Registered on its own real-time tick by TheUnknowingModSystem, at
+        // config.StormMembershipIntervalSeconds - deliberately NOT the shared 10s OnGameTick
+        // (ROADMAP 0.5). A player crossing a storm boundary right after the shared tick fired used
+        // to wait up to 10s for the fog to catch up in either direction (blinded 10s after
+        // actually clearing the storm, or unprotected 10s after actually entering it). This tick
+        // only does a cheap per-online-player chunk-column membership check (no storm state
+        // mutation, no Persist), so it's safe to run far more often than the 10s tick.
+        //
         // Tells each online player's client whether they're currently inside any storm's chunk
         // bounds, but only sends InStormPacket on an actual transition (entering/leaving), not
         // every tick - the client uses this to push/pop a real AmbientModifier fog effect (see
         // TheUnknowingModSystem.StartClientSide), which needs real client-side rendering state the
         // server has no other way to drive.
-        private void UpdatePlayerStormMembership()
+        public void OnMembershipTick()
         {
             foreach (IServerPlayer player in api.World.AllOnlinePlayers.Cast<IServerPlayer>())
             {

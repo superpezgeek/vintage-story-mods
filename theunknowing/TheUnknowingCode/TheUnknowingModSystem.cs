@@ -33,6 +33,7 @@ namespace TheUnknowing
             api.Event.RegisterGameTickListener(_ => stormManager.OnSpawnTick(), (int)(config.EnemySpawnIntervalSeconds * 1000));
             api.Event.RegisterGameTickListener(_ => stormManager.OnFogTick(), (int)(config.FogParticleIntervalSeconds * 1000));
             api.Event.RegisterGameTickListener(_ => stormManager.OnAmbientAudioTick(), (int)(config.AmbientAudioIntervalSeconds * 1000));
+            api.Event.RegisterGameTickListener(_ => stormManager.OnMembershipTick(), (int)(config.StormMembershipIntervalSeconds * 1000));
 
             api.ChatCommands.Create("unknowing-storm")
                 .WithAlias(new[] { "unknowingstorm" })
