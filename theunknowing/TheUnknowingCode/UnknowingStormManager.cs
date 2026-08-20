@@ -92,10 +92,7 @@ namespace TheUnknowing
             storms.Add(storm);
             Persist();
 
-            ChunkColumn centerColumn = storm.ChunkColumns[storm.ChunkColumns.Count / 2];
-            double centerX = centerColumn.ChunkX * ClaimChunkMath.ChunkSize + ClaimChunkMath.ChunkSize / 2.0;
-            double centerZ = centerColumn.ChunkZ * ClaimChunkMath.ChunkSize + ClaimChunkMath.ChunkSize / 2.0;
-            int centerGroundY = api.World.BlockAccessor.GetTerrainMapheightAt(new BlockPos((int)centerX, 0, (int)centerZ));
+            var (centerX, centerGroundY, centerZ) = GetStormCenterPos(storm);
 
             // Cloud entities aren't spawned here - EnsureCloudsSpawned (called from OnGameTick)
             // picks up every column with CloudEntityId == 0 within one game tick of this storm
@@ -159,29 +156,97 @@ namespace TheUnknowing
             if (changed) Persist();
         }
 
-        // Tells every online player, not just whoever ran the command, the moment a storm goes
-        // up - the whole server should know a base just became lootable and dangerous. The
-        // location is a clickable command:// (VTML) link that runs /waypoint addati directly
-        // rather than a bare coordinate string - VTML has no protocol for opening the map at a
-        // location, but dropping a pinned waypoint there gets players to the same place in one
-        // click, which is the actual goal ("so people can mark it").
-        private void BroadcastStormUnleashed(string playerName, double x, int groundY, double z)
+        // The average of every column's own center point, in block coordinates - used directly
+        // when it lands inside a chunk the storm actually covers (the common case for a simple,
+        // convex footprint), which can legitimately be a seam between two chunks rather than the
+        // dead center of one specific chunk (e.g. a claim that's an even number of chunks wide).
+        // Bugs fixed in sequence to get here:
+        //
+        // 1. The original code picked ChunkColumns[ChunkColumns.Count / 2] as "the center" - the
+        //    middle *list index* of whatever order the set happened to enumerate in (ChunkColumns
+        //    is built from a HashSet, see ClaimChunkMath.GetCoveredChunkColumns - not spatial, and
+        //    not a guaranteed order either way). Confirmed live: the waypoint landed "way south" of
+        //    the actual storm.
+        // 2. Fixed to a true centroid, used unconditionally - correct for a simple filled
+        //    rectangle, but for an L-shaped/multi-area claim the average can fall in a gap that was
+        //    never actually part of the storm, or outside it entirely. Confirmed live again: the
+        //    next waypoint was ~250 blocks off with GetTerrainMapheightAt returning 1 (no real
+        //    terrain there).
+        // 3. Fixed by *always* snapping to whichever actual chunk column is nearest the average -
+        //    safe (always real, loaded ground), but threw away precision for the common convex
+        //    case: confirmed live the waypoint was landing dead center of some chunk, just not the
+        //    true center of the whole storm (e.g. a claim an even number of chunks wide has its
+        //    real center sitting exactly on the seam between two chunks - snapping always picks one
+        //    of them arbitrarily instead).
+        //
+        // Current fix: use the raw average whenever its own containing chunk is actually covered -
+        // giving the true center, seam or not - and only fall back to snapping to the nearest
+        // covered column when the average itself lands somewhere the storm doesn't cover (the
+        // concave/multi-area case bug 2 introduced).
+        private (double X, int GroundY, double Z) GetStormCenterPos(UnknowingStorm storm)
         {
-            string waypointLink =
-                $"command:///waypoint addati spiral {(int)x} {groundY} {(int)z} true #B4145A The Unknowing - {playerName}";
+            double avgX = storm.ChunkColumns.Average(c => c.ChunkX * ClaimChunkMath.ChunkSize + ClaimChunkMath.ChunkSize / 2.0);
+            double avgZ = storm.ChunkColumns.Average(c => c.ChunkZ * ClaimChunkMath.ChunkSize + ClaimChunkMath.ChunkSize / 2.0);
 
-            api.BroadcastMessageToAllGroups(
-                $"<strong>The Unknowing</strong> descends upon '{playerName}''s abandoned ground. " +
-                $"<a href=\"{waypointLink}\">Mark the location</a> before it's lost.",
-                EnumChatType.Notification, null);
+            var avgColumn = ClaimChunkMath.ToChunkColumn(avgX, avgZ);
+            bool avgIsCovered = storm.ChunkColumns.Any(c => c.ChunkX == avgColumn.ChunkX && c.ChunkZ == avgColumn.ChunkZ);
+
+            double x, z;
+            if (avgIsCovered)
+            {
+                x = avgX;
+                z = avgZ;
+            }
+            else
+            {
+                ChunkColumn nearest = storm.ChunkColumns
+                    .OrderBy(c => (c.ChunkX - avgColumn.ChunkX) * (c.ChunkX - avgColumn.ChunkX) + (c.ChunkZ - avgColumn.ChunkZ) * (c.ChunkZ - avgColumn.ChunkZ))
+                    .First();
+                x = nearest.ChunkX * ClaimChunkMath.ChunkSize + ClaimChunkMath.ChunkSize / 2.0;
+                z = nearest.ChunkZ * ClaimChunkMath.ChunkSize + ClaimChunkMath.ChunkSize / 2.0;
+            }
+
+            int groundY = api.World.BlockAccessor.GetTerrainMapheightAt(new BlockPos((int)x, 0, (int)z));
+            return (x, groundY, z);
         }
 
-        // Shared by the phase-transition broadcasts below - same "whole server should know"
-        // reasoning as BroadcastStormUnleashed, no waypoint link needed since one was already
-        // dropped when the storm started.
-        private void BroadcastStormPhase(string message)
+        // Builds the clickable command:// (VTML) link used by every storm broadcast below. VTML
+        // has no protocol for opening the map at a location, but dropping a pinned waypoint there
+        // gets players to the same place in one click, which is the actual goal - and every
+        // broadcast gets its own link (not just the first), so missing/deleting an earlier one
+        // isn't a dead end.
+        //
+        // The real bug behind every "wrong waypoint" investigation so far, found only after the
+        // chunk-centroid math itself was confirmed correct via GetStormCenterPos's diagnostic log:
+        // /waypoint addati's x/y/z args go through CmdArgs.PopFlexiblePos (see vsapi), which adds
+        // the map's center offset to any bare number - `=` is required to mark a coordinate as a
+        // literal absolute position (same convention as /tp; documented in the command's own
+        // syntax help: "100 150 -180" is map-relative, "=512100 =150 =511880" is absolute). x/z
+        // here are already absolute engine coordinates (derived from chunk index * ChunkSize), so
+        // without `=` the game was adding the map-center offset a second time on top of them -
+        // silently wrong under every version of the center-finding fix, since the bug was never in
+        // the coordinates being computed, only in how they were handed to the command.
+        private string BuildLocationLink(string playerName, double x, int groundY, double z, string linkText)
         {
-            api.BroadcastMessageToAllGroups($"<strong>The Unknowing</strong> {message}", EnumChatType.Notification, null);
+            string waypointLink =
+                $"command:///waypoint addati spiral ={(int)x} ={groundY} ={(int)z} true #B4145A The Unknowing - {playerName}";
+            return $"<a href=\"{waypointLink}\">{linkText}</a>";
+        }
+
+        // Tells every online player, not just whoever ran the command, the moment a storm goes
+        // up - the whole server should know a base just became lootable and dangerous. No player
+        // name in the message itself (deliberate - the target is expected to be announced
+        // separately, e.g. in Discord, ahead of the storm), but their name still seeds the
+        // waypoint's own label.
+        private void BroadcastStormUnleashed(string playerName, double x, int groundY, double z)
+        {
+            string link = BuildLocationLink(playerName, x, groundY, z, "recently forgotten lands");
+            BroadcastMessage($"<strong>The Unknowing</strong> gathers strength over {link}.");
+        }
+
+        private void BroadcastMessage(string html)
+        {
+            api.BroadcastMessageToAllGroups(html, EnumChatType.Notification, null);
         }
 
         // Registered on a real-time tick by TheUnknowingModSystem. Handles the GatheringStrength ->
@@ -204,7 +269,11 @@ namespace TheUnknowing
                 {
                     storm.Status = UnknowingStormStatus.EnteringReality;
                     api.World.Logger.Notification($"[TheUnknowing] Storm over '{storm.TargetPlayerName}' is entering reality.");
-                    BroadcastStormPhase($"tightens its grip over what was once '{storm.TargetPlayerName}''s ground - the horrors within grow stronger.");
+                    {
+                        var (x, groundY, z) = GetStormCenterPos(storm);
+                        string link = BuildLocationLink(storm.TargetPlayerName, x, groundY, z, "recently forgotten lands");
+                        BroadcastMessage($"<strong>The Unknowing</strong> begins to devour {link} - the horrors within grow stronger.");
+                    }
                     changed = true;
                 }
                 else if (storm.Status == UnknowingStormStatus.EnteringReality &&
@@ -212,7 +281,11 @@ namespace TheUnknowing
                 {
                     storm.Status = UnknowingStormStatus.Collapsing;
                     api.World.Logger.Notification($"[TheUnknowing] Storm over '{storm.TargetPlayerName}' is collapsing (duration elapsed).");
-                    BroadcastStormPhase($"begins to collapse over what was once '{storm.TargetPlayerName}''s ground - its hold is finally breaking.");
+                    {
+                        var (x, groundY, z) = GetStormCenterPos(storm);
+                        string link = BuildLocationLink(storm.TargetPlayerName, x, groundY, z, "recently forgotten lands");
+                        BroadcastMessage($"Reality surrounding {link} begins to collapse.");
+                    }
                     changed = true;
                 }
 
@@ -278,6 +351,12 @@ namespace TheUnknowing
             }
 
             RegenClaimedChunks(storm);
+
+            // Centroid computed after the regen (not before) so the waypoint's Y reflects the
+            // freshly regenerated terrain height, not the pre-collapse claim's.
+            var (x, groundY, z) = GetStormCenterPos(storm);
+            string link = BuildLocationLink(storm.TargetPlayerName, x, groundY, z, "what was forgotten");
+            BroadcastMessage($"<strong>The Unknowing</strong> reclaims {link}.");
         }
 
         // Runs /wgen regenrange over the rectangular bounding box of every chunk column the storm
@@ -439,10 +518,7 @@ namespace TheUnknowing
                 if (storm.Status == UnknowingStormStatus.Done) continue;
                 if (storm.ChunkColumns.Count == 0) continue;
 
-                ChunkColumn center = storm.ChunkColumns[storm.ChunkColumns.Count / 2];
-                double x = center.ChunkX * ClaimChunkMath.ChunkSize + ClaimChunkMath.ChunkSize / 2.0;
-                double z = center.ChunkZ * ClaimChunkMath.ChunkSize + ClaimChunkMath.ChunkSize / 2.0;
-                int groundY = api.World.BlockAccessor.GetTerrainMapheightAt(new BlockPos((int)x, 0, (int)z));
+                var (x, groundY, z) = GetStormCenterPos(storm);
 
                 api.World.PlaySoundAt(riftSound, x, groundY, z, null, true, config.AmbientAudioRange);
             }

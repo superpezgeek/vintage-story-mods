@@ -18,6 +18,15 @@ namespace TheUnknowing
         private bool inStorm;
         private float fogFadeSeconds = 2.5f;
 
+        // Runs on both sides before Entities/Blocks/Items are loaded from JSON - custom entity
+        // behavior classes referenced by code (e.g. stormcloud.json's "theunknowing:infotext")
+        // need to be registered here, not in StartServerSide/StartClientSide (those run after).
+        public override void Start(ICoreAPI api)
+        {
+            base.Start(api);
+            api.RegisterEntityBehaviorClass("theunknowing:infotext", typeof(EntityBehaviorInfoText));
+        }
+
         public override void StartServerSide(ICoreServerAPI api)
         {
             base.StartServerSide(api);

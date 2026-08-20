@@ -7,7 +7,8 @@
 		"renderer": "Shape",
 		"shape": { "base": "entity/stormcloud" },
 		"behaviors": [
-			{ "code": "interpolateposition" }
+			{ "code": "interpolateposition" },
+			{ "code": "theunknowing:infotext", "langCode": "theunknowing:stormcloud-desc" }
 		]
 	},
 	"server": {
