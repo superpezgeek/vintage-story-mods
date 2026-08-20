@@ -68,9 +68,20 @@ things tried and reversed.
 - [x] Faster/separate 1s tick for player storm membership, so the
       client-side fog fade can't lag up to 10s behind a player actually
       crossing the boundary.
-- [ ] Cloud entity spawn animation.
-- [ ] Cloud entity expansion animation (grows over the storm's
-      lifetime).
+- [x] Cloud entity spawn animation - a "beam from the sky" ignite effect
+      (the column's height keyframes in from near-zero, anchored at the
+      top so it reads as descending rather than growing up from the
+      ground). Confirmed live after four rounds of live-tested fixes
+      (invalid enum value, an engine null-ref on partially-set stretch
+      keyframes, an off-by-one on quantityframes, and an animation
+      easing quirk unrelated to spawn/anim call order) - see
+      `NOTES.local.md` for the full sequence.
+- [x] Cloud entity expansion animation - widens from 12 to 32 blocks
+      (chunk width) the moment a storm enters `EnteringReality`, applied
+      to every cloud the storm owns. Confirmed live. The starfield
+      texture visibly stretches as it widens (static UV mapping, no
+      re-tiling) - kept deliberately, reframed as in-theme spacetime
+      distortion rather than fixed.
 - [x] Starfield cloud texture — void-black base with scattered
       star-dots, aspect-matched per face so stars don't smear. Confirmed
       live: "looks great." (A WBOIT transparency artifact at box corners

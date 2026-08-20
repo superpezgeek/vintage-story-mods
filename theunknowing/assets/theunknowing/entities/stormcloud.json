@@ -9,6 +9,10 @@
 		"behaviors": [
 			{ "code": "interpolateposition" },
 			{ "code": "theunknowing:infotext", "langCode": "theunknowing:stormcloud-desc" }
+		],
+		"animations": [
+			{ "code": "spawn", "animation": "spawn", "animationSpeed": 1.0 },
+			{ "code": "widen", "animation": "widen", "animationSpeed": 1.0 }
 		]
 	},
 	"server": {

@@ -14,7 +14,7 @@
 			"name": "column",
 			"from": [-96, -48, -96],
 			"to": [96, 5120, 96],
-			"rotationOrigin": [0, 0, 0],
+			"rotationOrigin": [0, 5120, 0],
 			"renderPass": 3,
 			"faces": {
 				"north": { "texture": "#cloud", "uv": [0, 0, 24, 640] },
@@ -24,6 +24,50 @@
 				"up": { "texture": "#top", "uv": [0, 0, 24, 24] },
 				"down": { "texture": "#top", "uv": [0, 0, 24, 24], "enabled": false }
 			}
+		}
+	],
+	"animations": [
+		{
+			"name": "Spawn",
+			"code": "spawn",
+			"quantityframes": 31,
+			"onActivityStopped": "PlayTillEnd",
+			"onAnimationEnd": "Hold",
+			"keyframes": [
+				{
+					"frame": 0,
+					"elements": {
+						"column": { "stretchX": 1.0, "stretchY": 0.01, "stretchZ": 1.0 }
+					}
+				},
+				{
+					"frame": 30,
+					"elements": {
+						"column": { "stretchX": 1.0, "stretchY": 1.0, "stretchZ": 1.0 }
+					}
+				}
+			]
+		},
+		{
+			"name": "Widen",
+			"code": "widen",
+			"quantityframes": 31,
+			"onActivityStopped": "PlayTillEnd",
+			"onAnimationEnd": "Hold",
+			"keyframes": [
+				{
+					"frame": 0,
+					"elements": {
+						"column": { "stretchX": 1.0, "stretchY": 1.0, "stretchZ": 1.0 }
+					}
+				},
+				{
+					"frame": 30,
+					"elements": {
+						"column": { "stretchX": 2.6667, "stretchY": 1.0, "stretchZ": 2.6667 }
+					}
+				}
+			]
 		}
 	]
 }
