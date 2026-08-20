@@ -454,18 +454,25 @@ so far.
 - [ ] ConfigLib support (mods.vintagestory.at/show/mod/9551) - already
       installed as a dependency for other mods on the server, but
       `TheUnknowing.json` isn't hooked into it yet.
-- [ ] Faster/separate tick for `UpdatePlayerStormMembership`. Currently
-      runs off the shared 10s `OnGameTick` (same tick as Active ->
-      Collapsing and containment), so `InStormPacket` - and therefore
-      the client-side fog fade - can lag up to ~10s behind a player
+- [x] Faster/separate tick for player storm membership. Used to run off
+      the shared 10s `OnGameTick` (same tick as the phase progression
+      and containment), so `InStormPacket` - and therefore the
+      client-side fog fade - could lag up to ~10s behind a player
       actually crossing the storm boundary in either direction: leave
-      right after a tick fires and you stay "blinded" for up to 10s
-      after you're already clear; enter right after a tick fires and
-      you go up to 10s without fog before it catches up. Explore
-      splitting membership tracking onto its own faster tick (candidate
-      interval: something closer to `FogParticleIntervalSeconds`, or
-      faster) so the fade starts promptly on the real crossing instead
-      of on the next 10s boundary-check.
+      right after a tick fires and stay "blinded" for up to 10s after
+      already clear; enter right after a tick fires and go up to 10s
+      without fog before it catches up.
+      `UpdatePlayerStormMembership` renamed to `OnMembershipTick`
+      (matching the `On*Tick` naming every other tick method already
+      uses) and pulled out of `OnGameTick` entirely, onto its own
+      listener at a new `StormMembershipIntervalSeconds` config
+      (default 1.0s vs. the old 10s - a 10x tighter worst-case lag).
+      Safe to run this much faster than the other ticks: the check
+      itself is just a chunk-column lookup per online player, no storm
+      state mutation and no `Persist()` call, unlike everything else on
+      `OnGameTick`. Not yet confirmed live (would need to watch the fog
+      fade trigger noticeably faster crossing a boundary right after a
+      tick fires, vs. the old up-to-10s lag).
 - [ ] Cloud entity spawn animation.
 - [ ] Cloud entity expansion animation (grows over time, similar to
       what the old particle-based beacon did via
