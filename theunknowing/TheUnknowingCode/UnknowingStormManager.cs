@@ -147,6 +147,35 @@ namespace TheUnknowing
 
                 Entity cloudEntity = api.ClassRegistry.CreateEntity(cloudType);
                 cloudEntity.Pos.SetPos(x, groundY, z);
+
+                // "spawn" (see stormcloud's shape/entity JSON) keyframes the column element's
+                // StretchY from near-0 to 1, pivoted at the element's rotationOrigin (the top of
+                // the column, not the bottom) - so it reads as descending from the sky rather than
+                // growing up from the ground.
+                //
+                // Started before SpawnEntity so the entity's first spawn packet already carries
+                // "spawn is running" as part of its baseline synced state, rather than that arriving
+                // via a later update. Uses the AnimationMetaData overload, not the
+                // entity.StartAnimation(string) convenience one (the pattern AI tasks use, e.g.
+                // AiTaskBase.StartAnimation) - that overload resolves the code via
+                // entity.Properties.Client.AnimationsByMetaCode (vsapi AnimationManager), and
+                // Properties isn't populated until Initialize(), which SpawnEntity is what triggers -
+                // calling it pre-spawn would NullReferenceException. AnimManager.StartAnimation
+                // (AnimationMetaData) skips that lookup entirely (confirmed via vsapi source), so
+                // it's safe to call before SpawnEntity.
+                //
+                // EaseInSpeed pinned high (default is 10) - every animation's contribution actually
+                // fades in via an internal EasingFactor/BlendedWeight that starts at 0 and ramps
+                // toward 1 over several frames (see RunningAnimation.Progress/CalcBlendedWeight in
+                // vsapi), independent of our own stretchY keyframes and independent of spawn/anim
+                // call order above. Confirmed live (twice) that this, not call order, was the real
+                // cause of the "full height -> snap to 0 -> grow" flash: the ease-in was blending
+                // between the unanimated bind pose (full height) and our animation's own frame 0
+                // (near-zero), on top of the keyframe animation we already wrote to do exactly that
+                // growth ourselves. A high EaseInSpeed collapses that blend to effectively one frame,
+                // leaving our own keyframes as the only thing driving the visible growth.
+                var spawnAnim = new AnimationMetaData { Code = "spawn", Animation = "spawn", AnimationSpeed = 1f, EaseInSpeed = 1000f }.Init();
+                cloudEntity.AnimManager.StartAnimation(spawnAnim);
                 api.World.SpawnEntity(cloudEntity);
 
                 column.CloudEntityId = cloudEntity.EntityId;
@@ -154,6 +183,34 @@ namespace TheUnknowing
             }
 
             if (changed) Persist();
+        }
+
+        // Widens every cloud entity this storm owns to the width of a chunk when EnteringReality
+        // begins - "the unknowing's strength in the realm" made visible, the same idea the
+        // since-removed particle-based beacon growth had in 0.3, just applied to the cloud entity
+        // itself instead. 12 -> 32 blocks wide (target/current = 2.6667, see the shape's "widen"
+        // animation) while height stays untouched.
+        //
+        // Stops "spawn" first rather than letting both animations run concurrently on the same
+        // element - "widen"'s own frame 0 matches spawn's held final pose (1,1,1) exactly, so
+        // there's no visual jump, and it sidesteps any assumption about how multiple simultaneously
+        // active animations blend together (untested, and this mod's animation work so far has a
+        // strong track record of "the obvious assumption is wrong" - see NOTES.local.md).
+        // EaseInSpeed pinned high for the same reason as "spawn" - avoids the same
+        // blend-in-from-the-bind-pose flash bug already fixed once on that animation.
+        private void TriggerCloudWidenAnimation(UnknowingStorm storm)
+        {
+            var widenAnim = new AnimationMetaData { Code = "widen", Animation = "widen", AnimationSpeed = 1f, EaseInSpeed = 1000f }.Init();
+
+            foreach (ChunkColumn column in storm.ChunkColumns)
+            {
+                if (column.CloudEntityId == 0) continue;
+                Entity? cloudEntity = api.World.GetEntityById(column.CloudEntityId);
+                if (cloudEntity == null) continue;
+
+                cloudEntity.StopAnimation("spawn");
+                cloudEntity.AnimManager.StartAnimation(widenAnim);
+            }
         }
 
         // The average of every column's own center point, in block coordinates - used directly
@@ -274,6 +331,7 @@ namespace TheUnknowing
                         string link = BuildLocationLink(storm.TargetPlayerName, x, groundY, z, "recently forgotten lands");
                         BroadcastMessage($"<strong>The Unknowing</strong> begins to devour {link} - the horrors within grow stronger.");
                     }
+                    TriggerCloudWidenAnimation(storm);
                     changed = true;
                 }
                 else if (storm.Status == UnknowingStormStatus.EnteringReality &&
