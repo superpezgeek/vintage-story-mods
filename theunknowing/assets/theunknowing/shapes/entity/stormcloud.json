@@ -1,11 +1,13 @@
 {
-	"textureWidth": 8,
-	"textureHeight": 8,
+	"textureWidth": 24,
+	"textureHeight": 640,
 	"textureSizes": {
-		"cloud": [8, 8]
+		"cloud": [24, 640],
+		"top": [24, 24]
 	},
 	"textures": {
-		"cloud": "entity/stormcloud"
+		"cloud": "entity/stormcloud",
+		"top": "entity/stormcloud_top"
 	},
 	"elements": [
 		{
@@ -15,12 +17,12 @@
 			"rotationOrigin": [0, 0, 0],
 			"renderPass": 3,
 			"faces": {
-				"north": { "texture": "#cloud", "uv": [0, 0, 8, 8] },
-				"east": { "texture": "#cloud", "uv": [0, 0, 8, 8] },
-				"south": { "texture": "#cloud", "uv": [0, 0, 8, 8] },
-				"west": { "texture": "#cloud", "uv": [0, 0, 8, 8] },
-				"up": { "texture": "#cloud", "uv": [0, 0, 8, 8] },
-				"down": { "texture": "#cloud", "uv": [0, 0, 8, 8], "enabled": false }
+				"north": { "texture": "#cloud", "uv": [0, 0, 24, 640] },
+				"east": { "texture": "#cloud", "uv": [0, 0, 24, 640] },
+				"south": { "texture": "#cloud", "uv": [0, 0, 24, 640] },
+				"west": { "texture": "#cloud", "uv": [0, 0, 24, 640] },
+				"up": { "texture": "#top", "uv": [0, 0, 24, 24] },
+				"down": { "texture": "#top", "uv": [0, 0, 24, 24], "enabled": false }
 			}
 		}
 	]
