@@ -31,6 +31,8 @@ namespace TheUnknowing
         {
             base.StartServerSide(api);
 
+            api.World.Logger.StoryEvent("Unknowing what was forgotten...");
+
             UnknowingConfig config = api.LoadModConfig<UnknowingConfig>(ConfigFilename) ?? new UnknowingConfig();
             api.StoreModConfig(config, ConfigFilename);
 
