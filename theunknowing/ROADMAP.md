@@ -57,8 +57,8 @@ things tried and reversed.
       claimed chunks, then drops the storm from tracking.
 - [x] Full lifecycle confirmed live: summon -> gathering -> entering
       reality -> collapsing -> regen, land confirmed clean afterward.
-- [ ] `[StoryEvent]` log entry at the moment a storm's land is actually
-      wiped, for admin/story tracking. Backlogged.
+- [x] `[StoryEvent]` log entry - same pattern as Caveshrooms, a single
+      flavor line logged once on server start.
 
 ## 0.5 — polish & compatibility
 
