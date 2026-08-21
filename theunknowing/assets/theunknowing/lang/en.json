@@ -1,4 +1,18 @@
 {
 	"item-creature-stormcloud": "The Unknowing",
-	"stormcloud-desc": "The endless nothingness that consumes forgotten areas of the Dream Realms."
+	"stormcloud-desc": "The endless nothingness that consumes forgotten areas of the Dream Realms.",
+
+	"setting-gathering-hours": "Gathering Strength duration (hours)",
+	"setting-entering-hours": "Entering Reality duration (hours)",
+	"setting-entering-intensity-multiplier": "Entering Reality intensity multiplier",
+	"setting-enemy-spawn-interval-seconds": "Enemy spawn interval (seconds, restart required)",
+	"setting-max-concurrent-enemies": "Max concurrent enemies per storm",
+	"setting-fog-particle-interval-seconds": "Ember particle interval (seconds, restart required)",
+	"setting-ember-particles-per-column": "Ember particles per column",
+	"setting-ambient-audio-interval-seconds": "Ambient audio interval (seconds, restart required)",
+	"setting-ambient-audio-range": "Ambient audio range (blocks)",
+	"setting-fog-fade-seconds": "Fog fade duration (seconds)",
+	"setting-storm-membership-interval-seconds": "Storm membership check interval (seconds, restart required)",
+	"setting-enemy-entity-codes": "Enemy entity codes (Gathering Strength)",
+	"setting-entering-enemy-entity-codes": "Enemy entity codes (Entering Reality)"
 }

@@ -80,6 +80,37 @@ Same behavior as Caveshrooms' script (see its README for the full
 and deploys it to the live `Mods` folder. Pass `-SkipDeploy` to skip that
 last step.
 
+## Configuration
+
+Every tunable lives in `UnknowingConfig` and loads from
+`VintagestoryData/ModConfig/TheUnknowing.json`, created with defaults on
+first run. That file is always the one actually on disk — edit it
+directly (server restart required to pick up changes) and the mod works
+fine with nothing else installed.
+
+If [ConfigLib](https://mods.vintagestory.at/configlib) is installed
+(optional, not a hard dependency — see `modinfo.json`), the same
+settings also show up in its in-game GUI, defined in
+`assets/theunknowing/config/configlib-patches.json`. ConfigLib isn't a
+second config to keep in sync by hand: at startup `TheUnknowing.json`'s
+values are pushed into it, so the GUI reflects reality immediately
+rather than showing its own schema defaults, and any edit made through
+the GUI is written straight back to `TheUnknowing.json`. One file, two
+ways to edit it.
+
+**Don't hand-edit `TheUnknowing.json` while the server is running.** It's
+only ever read once, at startup — nothing reloads it live. If ConfigLib
+is installed and someone saves a change through its GUI at any point
+afterward, that save overwrites the whole file with ConfigLib's
+in-memory values, silently discarding any hand-edit made to the file in
+the meantime. Edit the file, then restart; or use ConfigLib's GUI; don't
+mix the two within the same server session.
+
+A few interval settings (spawn/particle/audio/membership tick rates)
+only take effect on the next server restart either way — they set a
+tick listener's interval once at startup rather than being read fresh
+each tick, which ConfigLib's GUI notes in each one's tooltip.
+
 ## Mechanics worth understanding before changing
 
 **Claim targeting.** `LandClaim` has no stable numeric ID in the API —

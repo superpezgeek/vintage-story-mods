@@ -2,7 +2,7 @@
   "type": "code",
   "modid": "theunknowing",
   "name": "The Unknowing",
-  "version": "1.0.0-pre.44",
+  "version": "1.0.0-pre.48",
   "description": "Admin-summoned storm of forgetting that consumes an abandoned land claim, then regenerates the land beneath it.",
   "authors": [ "superpezgeek" ],
   "dependencies": {

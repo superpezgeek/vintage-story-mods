@@ -1,0 +1,113 @@
+{
+  "version": 2,
+  "settings": {
+    "float": {
+      "GATHERING_HOURS": {
+        "name": "gathering-strength-hours",
+        "ingui": "theunknowing:setting-gathering-hours",
+        "weight": 1.0,
+        "comment": "Hours a storm spends in GatheringStrength before advancing to EnteringReality.",
+        "default": 24.0,
+        "range": { "min": 1, "max": 168, "step": 1 }
+      },
+      "ENTERING_HOURS": {
+        "name": "entering-reality-hours",
+        "ingui": "theunknowing:setting-entering-hours",
+        "weight": 1.1,
+        "comment": "Hours a storm spends in EnteringReality before collapsing and regenerating the land.",
+        "default": 24.0,
+        "range": { "min": 1, "max": 168, "step": 1 }
+      },
+      "ENTERING_INTENSITY_MULTIPLIER": {
+        "name": "entering-intensity-multiplier",
+        "ingui": "theunknowing:setting-entering-intensity-multiplier",
+        "weight": 1.2,
+        "comment": "Multiplies max concurrent enemies and ember particle density during EnteringReality.",
+        "default": 2.0,
+        "range": { "min": 1, "max": 5, "step": 0.1 }
+      },
+      "ENEMY_SPAWN_INTERVAL_SECONDS": {
+        "name": "enemy-spawn-interval-seconds",
+        "ingui": "theunknowing:setting-enemy-spawn-interval-seconds",
+        "weight": 2.0,
+        "comment": "Real-time seconds between enemy spawn attempts per storm. Requires a server restart to take effect (sets a tick listener's interval at startup).",
+        "default": 30.0,
+        "range": { "min": 5, "max": 300, "step": 1 }
+      },
+      "FOG_PARTICLE_INTERVAL_SECONDS": {
+        "name": "fog-particle-interval-seconds",
+        "ingui": "theunknowing:setting-fog-particle-interval-seconds",
+        "weight": 2.1,
+        "comment": "Real-time seconds between ember particle bursts. Requires a server restart to take effect.",
+        "default": 2.0,
+        "range": { "min": 0.5, "max": 30, "step": 0.5 }
+      },
+      "EMBER_PARTICLES_PER_COLUMN": {
+        "name": "ember-particles-per-column",
+        "ingui": "theunknowing:setting-ember-particles-per-column",
+        "weight": 2.2,
+        "comment": "Ember particles spawned per chunk column, per burst.",
+        "default": 4.0,
+        "range": { "min": 0, "max": 30, "step": 1 }
+      },
+      "AMBIENT_AUDIO_INTERVAL_SECONDS": {
+        "name": "ambient-audio-interval-seconds",
+        "ingui": "theunknowing:setting-ambient-audio-interval-seconds",
+        "weight": 2.3,
+        "comment": "Real-time seconds between ambient dread audio cues. Requires a server restart to take effect.",
+        "default": 15.0,
+        "range": { "min": 1, "max": 120, "step": 1 }
+      },
+      "AMBIENT_AUDIO_RANGE": {
+        "name": "ambient-audio-range",
+        "ingui": "theunknowing:setting-ambient-audio-range",
+        "weight": 2.4,
+        "comment": "Blocks the ambient audio cue carries from a storm's center.",
+        "default": 48.0,
+        "range": { "min": 8, "max": 256, "step": 8 }
+      },
+      "FOG_FADE_SECONDS": {
+        "name": "fog-fade-seconds",
+        "ingui": "theunknowing:setting-fog-fade-seconds",
+        "weight": 3.0,
+        "comment": "Real-time seconds for the in-storm fog effect to fade in/out when crossing a storm boundary.",
+        "default": 2.5,
+        "range": { "min": 0, "max": 30, "step": 0.5 }
+      },
+      "STORM_MEMBERSHIP_INTERVAL_SECONDS": {
+        "name": "storm-membership-interval-seconds",
+        "ingui": "theunknowing:setting-storm-membership-interval-seconds",
+        "weight": 3.1,
+        "comment": "Real-time seconds between player storm-boundary checks. Requires a server restart to take effect.",
+        "default": 1.0,
+        "range": { "min": 0.1, "max": 10, "step": 0.1 }
+      }
+    },
+    "integer": {
+      "MAX_CONCURRENT_ENEMIES": {
+        "name": "max-concurrent-enemies",
+        "ingui": "theunknowing:setting-max-concurrent-enemies",
+        "weight": 1.3,
+        "comment": "Per-storm cap on live spawned enemies (before the EnteringReality multiplier).",
+        "default": 6,
+        "range": { "min": 1, "max": 30, "step": 1 }
+      }
+    },
+    "string": {
+      "ENEMY_ENTITY_CODES": {
+        "name": "enemy-entity-codes",
+        "ingui": "theunknowing:setting-enemy-entity-codes",
+        "weight": 4.0,
+        "comment": "Entity codes spawned during GatheringStrength, comma-separated, e.g. game:drifter-normal, game:drifter-deep.",
+        "default": "game:drifter-normal, game:drifter-deep"
+      },
+      "ENTERING_ENEMY_ENTITY_CODES": {
+        "name": "entering-enemy-entity-codes",
+        "ingui": "theunknowing:setting-entering-enemy-entity-codes",
+        "weight": 4.1,
+        "comment": "Entity codes spawned during EnteringReality (replaces enemy-entity-codes entirely while active), comma-separated.",
+        "default": "game:drifter-tainted, game:drifter-corrupt, game:drifter-nightmare, game:drifter-double-headed"
+      }
+    }
+  }
+}
