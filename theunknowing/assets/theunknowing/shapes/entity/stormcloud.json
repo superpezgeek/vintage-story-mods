@@ -15,7 +15,7 @@
 			"from": [-96, -48, -96],
 			"to": [96, 5120, 96],
 			"rotationOrigin": [0, 5120, 0],
-			"renderPass": 3,
+			"renderPass": 1,
 			"faces": {
 				"north": { "texture": "#cloud", "uv": [0, 0, 24, 640] },
 				"east": { "texture": "#cloud", "uv": [0, 0, 24, 640] },
