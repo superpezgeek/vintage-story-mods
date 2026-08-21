@@ -62,9 +62,18 @@ things tried and reversed.
 
 ## 0.5 — polish & compatibility
 
-- [ ] ConfigLib support (mods.vintagestory.at/show/mod/9551) - already
-      installed as a dependency for other mods on the server, but
-      `TheUnknowing.json` isn't hooked into it yet.
+- [x] ConfigLib support (mods.vintagestory.at/show/mod/9551) - every
+      `UnknowingConfig` field is now editable live via ConfigLib's
+      in-game GUI (`assets/theunknowing/config/configlib-patches.json`).
+      `TheUnknowing.json` stays the one file on disk - ConfigLib is
+      seeded from it at startup (so installing ConfigLib on a server
+      with an already-tuned config can't silently stomp those values
+      back to defaults) and every GUI edit is written straight back to
+      it. Confirmed live end-to-end: edited settings via ConfigLib's GUI,
+      saved, and confirmed `TheUnknowing.json` itself updated to match.
+      See `NOTES.local.md` for the full integration pattern (including
+      two real bugs found and fixed along the way) - meant
+      to be reused for Caveshrooms next.
 - [x] Faster/separate 1s tick for player storm membership, so the
       client-side fog fade can't lag up to 10s behind a player actually
       crossing the boundary.
