@@ -2,8 +2,8 @@
 	"item-creature-stormcloud": "The Unknowing",
 	"stormcloud-desc": "The endless nothingness that consumes forgotten areas of the Dream Realms.",
 
-	"setting-gathering-hours": "Gathering Strength duration (hours)",
-	"setting-entering-hours": "Entering Reality duration (hours)",
+	"setting-gathering-minutes": "Gathering Strength duration (real-life minutes)",
+	"setting-entering-minutes": "Entering Reality duration (real-life minutes)",
 	"setting-entering-intensity-multiplier": "Entering Reality intensity multiplier",
 	"setting-enemy-spawn-interval-seconds": "Enemy spawn interval (seconds, restart required)",
 	"setting-max-concurrent-enemies": "Max concurrent enemies per storm",

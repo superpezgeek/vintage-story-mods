@@ -37,18 +37,21 @@ namespace TheUnknowing
         [ProtoMember(1)]
         public string TargetPlayerName { get; set; } = "";
 
-        [ProtoMember(2)]
-        public double StartTotalHours { get; set; }
+        // Snapshotted from config at storm creation rather than read live from UnknowingConfig on
+        // every tick, so a config change doesn't retroactively alter a storm already in progress.
+        // Fields 2, 7, 8 (the old in-game-hours StartTotalHours/GatheringStrengthDurationHours/
+        // EnteringRealityDurationHours) intentionally left unused rather than reused, per
+        // protobuf-net convention - see UnknowingStormStatus. Replaced with real-world wall-clock
+        // equivalents so phase timing means the same real-life wait regardless of a server's
+        // calendar speed.
+        [ProtoMember(9)]
+        public long StartUnixMillis { get; set; }
 
-        // Snapshotted from config at storm creation (like StartTotalHours) rather than read live
-        // from UnknowingConfig on every tick, so a config change doesn't retroactively alter a
-        // storm already in progress. Field 3 (the old single DurationHours) intentionally left
-        // unused rather than reused, per protobuf-net convention - see UnknowingStormStatus.
-        [ProtoMember(7)]
-        public double GatheringStrengthDurationHours { get; set; }
+        [ProtoMember(10)]
+        public double GatheringStrengthDurationMinutes { get; set; }
 
-        [ProtoMember(8)]
-        public double EnteringRealityDurationHours { get; set; }
+        [ProtoMember(11)]
+        public double EnteringRealityDurationMinutes { get; set; }
 
         [ProtoMember(4)]
         public UnknowingStormStatus Status { get; set; } = UnknowingStormStatus.GatheringStrength;

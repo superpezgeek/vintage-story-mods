@@ -219,8 +219,8 @@ namespace TheUnknowing
         // ConfigLib's GUI than raw JSON syntax would have been anyway.
         private static void SeedConfigLibFromConfig(IConfig libConfig, UnknowingConfig config)
         {
-            SetIfPresent(libConfig, "GATHERING_HOURS", config.GatheringStrengthDurationHours);
-            SetIfPresent(libConfig, "ENTERING_HOURS", config.EnteringRealityDurationHours);
+            SetIfPresent(libConfig, "GATHERING_MINUTES", config.GatheringStrengthDurationMinutes);
+            SetIfPresent(libConfig, "ENTERING_MINUTES", config.EnteringRealityDurationMinutes);
             SetIfPresent(libConfig, "ENTERING_INTENSITY_MULTIPLIER", config.EnteringIntensityMultiplier);
             SetIfPresent(libConfig, "ENEMY_SPAWN_INTERVAL_SECONDS", config.EnemySpawnIntervalSeconds);
             SetIfPresent(libConfig, "MAX_CONCURRENT_ENEMIES", config.MaxConcurrentEnemies);
@@ -252,8 +252,8 @@ namespace TheUnknowing
         // found (shouldn't happen once SeedConfigLibFromConfig has run, but GetSetting is nullable).
         private static void PullConfigLibIntoConfig(IConfig libConfig, UnknowingConfig config)
         {
-            config.GatheringStrengthDurationHours = libConfig.GetSetting("GATHERING_HOURS")?.Value.AsDouble(config.GatheringStrengthDurationHours) ?? config.GatheringStrengthDurationHours;
-            config.EnteringRealityDurationHours = libConfig.GetSetting("ENTERING_HOURS")?.Value.AsDouble(config.EnteringRealityDurationHours) ?? config.EnteringRealityDurationHours;
+            config.GatheringStrengthDurationMinutes = libConfig.GetSetting("GATHERING_MINUTES")?.Value.AsDouble(config.GatheringStrengthDurationMinutes) ?? config.GatheringStrengthDurationMinutes;
+            config.EnteringRealityDurationMinutes = libConfig.GetSetting("ENTERING_MINUTES")?.Value.AsDouble(config.EnteringRealityDurationMinutes) ?? config.EnteringRealityDurationMinutes;
             config.EnteringIntensityMultiplier = (float)(libConfig.GetSetting("ENTERING_INTENSITY_MULTIPLIER")?.Value.AsDouble(config.EnteringIntensityMultiplier) ?? config.EnteringIntensityMultiplier);
             config.EnemySpawnIntervalSeconds = libConfig.GetSetting("ENEMY_SPAWN_INTERVAL_SECONDS")?.Value.AsDouble(config.EnemySpawnIntervalSeconds) ?? config.EnemySpawnIntervalSeconds;
             config.MaxConcurrentEnemies = libConfig.GetSetting("MAX_CONCURRENT_ENEMIES")?.Value.AsInt(config.MaxConcurrentEnemies) ?? config.MaxConcurrentEnemies;
