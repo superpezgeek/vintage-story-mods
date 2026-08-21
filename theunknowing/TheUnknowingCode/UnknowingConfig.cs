@@ -10,10 +10,12 @@ namespace TheUnknowing
     {
         // How long a storm spends in each escalating phase before advancing to the next -
         // GatheringStrength (baseline pressure) then EnteringReality (scaled up by
-        // EnteringIntensityMultiplier below) before finally Collapsing. Total default matches the
-        // old flat 48h StormDurationHours this replaced.
-        public double GatheringStrengthDurationHours { get; set; } = 24.0;
-        public double EnteringRealityDurationHours { get; set; } = 24.0;
+        // EnteringIntensityMultiplier below) before finally Collapsing. Real-life minutes, not
+        // in-game hours - a server's calendar speed (SpeedOfTime) would otherwise make the same
+        // config value mean a wildly different real-world wait on different servers, forcing
+        // whoever sets this to first go figure out that server's calendar settings.
+        public double GatheringStrengthDurationMinutes { get; set; } = 30.0;
+        public double EnteringRealityDurationMinutes { get; set; } = 30.0;
 
         // Multiplies MaxConcurrentEnemies and EmberParticlesPerColumn while a storm is in the
         // EnteringReality phase - the one dial for "this feels stronger now" rather than a whole

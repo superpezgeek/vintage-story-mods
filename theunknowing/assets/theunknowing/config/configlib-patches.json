@@ -2,21 +2,21 @@
   "version": 2,
   "settings": {
     "float": {
-      "GATHERING_HOURS": {
-        "name": "gathering-strength-hours",
-        "ingui": "theunknowing:setting-gathering-hours",
+      "GATHERING_MINUTES": {
+        "name": "gathering-strength-minutes",
+        "ingui": "theunknowing:setting-gathering-minutes",
         "weight": 1.0,
-        "comment": "Hours a storm spends in GatheringStrength before advancing to EnteringReality.",
-        "default": 24.0,
-        "range": { "min": 1, "max": 168, "step": 1 }
+        "comment": "Real-life minutes a storm spends in GatheringStrength before advancing to EnteringReality.",
+        "default": 30.0,
+        "range": { "min": 0.25, "max": 60, "step": 0.25 }
       },
-      "ENTERING_HOURS": {
-        "name": "entering-reality-hours",
-        "ingui": "theunknowing:setting-entering-hours",
+      "ENTERING_MINUTES": {
+        "name": "entering-reality-minutes",
+        "ingui": "theunknowing:setting-entering-minutes",
         "weight": 1.1,
-        "comment": "Hours a storm spends in EnteringReality before collapsing and regenerating the land.",
-        "default": 24.0,
-        "range": { "min": 1, "max": 168, "step": 1 }
+        "comment": "Real-life minutes a storm spends in EnteringReality before collapsing and regenerating the land.",
+        "default": 30.0,
+        "range": { "min": 0.25, "max": 60, "step": 0.25 }
       },
       "ENTERING_INTENSITY_MULTIPLIER": {
         "name": "entering-intensity-multiplier",
@@ -72,7 +72,7 @@
         "weight": 3.0,
         "comment": "Real-time seconds for the in-storm fog effect to fade in/out when crossing a storm boundary.",
         "default": 2.5,
-        "range": { "min": 0, "max": 30, "step": 0.5 }
+        "range": { "min": 0, "max": 10, "step": 0.5 }
       },
       "STORM_MEMBERSHIP_INTERVAL_SECONDS": {
         "name": "storm-membership-interval-seconds",

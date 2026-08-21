@@ -82,9 +82,9 @@ namespace TheUnknowing
             var storm = new UnknowingStorm
             {
                 TargetPlayerName = playerName,
-                StartTotalHours = api.World.Calendar.TotalHours,
-                GatheringStrengthDurationHours = config.GatheringStrengthDurationHours,
-                EnteringRealityDurationHours = config.EnteringRealityDurationHours,
+                StartUnixMillis = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                GatheringStrengthDurationMinutes = config.GatheringStrengthDurationMinutes,
+                EnteringRealityDurationMinutes = config.EnteringRealityDurationMinutes,
                 Status = UnknowingStormStatus.GatheringStrength,
                 ChunkColumns = columns.Select(c => new ChunkColumn(c.ChunkX, c.ChunkZ)).ToList()
             };
@@ -102,8 +102,8 @@ namespace TheUnknowing
             return TextCommandResult.Success(
                 $"The Unknowing descends: {claims.Count} claim(s) for '{playerName}' erased, " +
                 $"{storm.ChunkColumns.Count} chunk column(s) now open to loot and monsters. " +
-                $"Gathering strength for {storm.GatheringStrengthDurationHours:0}h, then entering reality for " +
-                $"{storm.EnteringRealityDurationHours:0}h before it collapses.");
+                $"Gathering strength for {storm.GatheringStrengthDurationMinutes:0}m, then entering reality for " +
+                $"{storm.EnteringRealityDurationMinutes:0}m before it collapses.");
         }
 
         // Self-healing: ensures every column of every non-Done storm has a live landmark entity
@@ -313,16 +313,16 @@ namespace TheUnknowing
         // membership (fog fade) is NOT handled here - see OnMembershipTick, its own faster tick.
         public void OnGameTick()
         {
-            double nowHours = api.World.Calendar.TotalHours;
+            long nowMillis = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             bool changed = false;
             List<UnknowingStorm> finishedStorms = new();
 
             foreach (UnknowingStorm storm in storms)
             {
-                double elapsedHours = nowHours - storm.StartTotalHours;
+                double elapsedMinutes = (nowMillis - storm.StartUnixMillis) / 60000.0;
 
                 if (storm.Status == UnknowingStormStatus.GatheringStrength &&
-                    elapsedHours >= storm.GatheringStrengthDurationHours)
+                    elapsedMinutes >= storm.GatheringStrengthDurationMinutes)
                 {
                     storm.Status = UnknowingStormStatus.EnteringReality;
                     api.World.Logger.Notification($"[TheUnknowing] Storm over '{storm.TargetPlayerName}' is entering reality.");
@@ -335,7 +335,7 @@ namespace TheUnknowing
                     changed = true;
                 }
                 else if (storm.Status == UnknowingStormStatus.EnteringReality &&
-                    elapsedHours >= storm.GatheringStrengthDurationHours + storm.EnteringRealityDurationHours)
+                    elapsedMinutes >= storm.GatheringStrengthDurationMinutes + storm.EnteringRealityDurationMinutes)
                 {
                     storm.Status = UnknowingStormStatus.Collapsing;
                     api.World.Logger.Notification($"[TheUnknowing] Storm over '{storm.TargetPlayerName}' is collapsing (duration elapsed).");
@@ -835,8 +835,8 @@ namespace TheUnknowing
                 $"[{i}] target='{storm.TargetPlayerName}' status={storm.Status} " +
                 $"columns={storm.ChunkColumns.Count} spawnedEntities={storm.SpawnedEntityIds.Count} " +
                 $"cloudsSpawned={storm.ChunkColumns.Count(c => c.CloudEntityId != 0)}/{storm.ChunkColumns.Count} " +
-                $"startHour={storm.StartTotalHours:0.0} gatheringHours={storm.GatheringStrengthDurationHours:0.0} " +
-                $"enteringHours={storm.EnteringRealityDurationHours:0.0}");
+                $"startUnixMillis={storm.StartUnixMillis} gatheringMinutes={storm.GatheringStrengthDurationMinutes:0.0} " +
+                $"enteringMinutes={storm.EnteringRealityDurationMinutes:0.0}");
 
             return TextCommandResult.Success($"{storms.Count} tracked storm(s):\n" + string.Join("\n", lines));
         }
