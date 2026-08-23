@@ -40,6 +40,14 @@
       <HintPath>$(VintagestoryDir)\Lib\Newtonsoft.Json.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <!-- Optional soft dependency (see CaveshroomsModSystem.HookConfigLib) - vendored here only
+         because ConfigLib isn't part of the base game install, so there's no stable HintPath to
+         reference like the game's own DLLs above. Private=false: never copied into our own output,
+         relies entirely on the player/server's already-installed ConfigLib mod at runtime. -->
+    <Reference Include="configlib">
+      <HintPath>lib\configlib.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
 </Project>

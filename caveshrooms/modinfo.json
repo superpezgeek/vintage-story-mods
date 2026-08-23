@@ -2,7 +2,7 @@
   "type": "code",
   "modid": "caveshrooms",
   "name": "Caveshrooms",
-  "version": "1.0.0-rc.9",
+  "version": "1.0.0-rc.10",
   "description": "Adds a mushroom that fruits from patches of temporally unstable substrate deep in caves.",
   "authors": [ "superpezgeek" ],
   "dependencies": {
