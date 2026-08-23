@@ -24,6 +24,11 @@
       <HintPath>C:\Users\DJRic\AppData\Roaming\Vintagestory\Mods\VSSurvivalMod.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <!-- EntityShapeRenderer (StormcloudRenderer's base class) lives here, not in VintagestoryAPI. -->
+    <Reference Include="VSEssentials">
+      <HintPath>C:\Users\DJRic\AppData\Roaming\Vintagestory\Mods\VSEssentials.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="0Harmony">
       <HintPath>C:\Users\DJRic\AppData\Roaming\Vintagestory\Lib\0Harmony.dll</HintPath>
       <Private>false</Private>

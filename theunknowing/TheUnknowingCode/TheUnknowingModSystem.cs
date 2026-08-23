@@ -97,6 +97,12 @@ namespace TheUnknowing
         {
             base.StartClientSide(api);
 
+            // Registered here (not Start()) matching where the base game's own "Shape"/"Item"/
+            // etc. renderer classes are registered (vsessentialsmod Core.StartClientSide) -
+            // unlike entity behavior classes, renderer class resolution isn't tied to
+            // Entities-load-from-JSON timing, so this is safe alongside everything else here.
+            api.RegisterEntityRendererClass("theunknowing:stormcloud", typeof(StormcloudRenderer));
+
             // Color/density/brightness are a first-pass guess, expect these to need retuning once
             // seen live (same as every other numeric value in this mod so far).
             //
