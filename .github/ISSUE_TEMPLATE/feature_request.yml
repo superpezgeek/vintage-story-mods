@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest an idea for one of these mods
+title: "[mod]: "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: mod
+    attributes:
+      label: Mod
+      options:
+        - Caveshrooms
+        - The Unknowing
+        - Other / repo-wide
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What's the idea? What problem does it solve, or what would it add?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any other approaches you thought about, if applicable.
+    validations:
+      required: false

@@ -1,0 +1,66 @@
+name: Bug report
+description: Something in one of these mods is broken
+title: "[mod]: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: mod
+    attributes:
+      label: Mod
+      options:
+        - Caveshrooms
+        - The Unknowing
+        - Other / repo-wide
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened, and what did you expect instead?
+    validations:
+      required: true
+
+  - type: input
+    id: server-version
+    attributes:
+      label: Server version
+      description: The Vintage Story version the server (or singleplayer world) is running.
+      placeholder: e.g. 1.20.4
+    validations:
+      required: true
+
+  - type: input
+    id: mod-version
+    attributes:
+      label: Mod version
+      placeholder: e.g. 1.0.0-rc.2
+    validations:
+      required: true
+
+  - type: textarea
+    id: other-mods
+    attributes:
+      label: Other mods installed
+      description: List other mods running alongside this one, especially any that touch food, cooking, or the affected block/entity. Several past bugs here were cross-mod interactions.
+      placeholder: e.g. A Culinary Artillery, Alchemy
+    validations:
+      required: false
+
+  - type: textarea
+    id: stack-trace
+    attributes:
+      label: Stack trace / log output
+      description: Paste the relevant error from client-main.log or server-main.log, if any.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / video
+      description: Drag and drop images or video showing the issue, if applicable.
+    validations:
+      required: false
