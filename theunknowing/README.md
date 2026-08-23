@@ -1,6 +1,6 @@
 # The Unknowing
 
-A Vintage Story mod for Dream Realms RP. An admin-summoned storm of
+[A Vintage Story mod](https://mods.vintagestory.at/theunknowing) for Dream Realms RP. An admin-summoned storm of
 forgetting — our version of The Nothing / the Smoke Monster — that
 descends on an abandoned land claim, makes it lootable, and eventually
 erases and regenerates the land underneath it. In the server's lore,

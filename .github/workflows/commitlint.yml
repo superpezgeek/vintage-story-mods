@@ -1,0 +1,17 @@
+name: Commit messages
+
+on:
+  pull_request:
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # No commitlint.config.js in the repo - falls back to @commitlint/config-conventional,
+      # which is the Conventional Commits format documented in the root README
+      # (type(scope): summary, lowercase, no trailing period).
+      - uses: wagoid/commitlint-github-action@v6

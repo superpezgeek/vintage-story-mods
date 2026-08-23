@@ -1,6 +1,6 @@
 # Caveshrooms
 
-A Vintage Story mod. A mushroom that fruits from patches of
+[A Vintage Story mod](https://mods.vintagestory.at/caveshrooms) for Dream Realms RP. A mushroom that fruits from patches of
 "unstable substrate" — a slimy mat that's a visible concentration of
 ambient temporal instability, growing in dark cave interiors. The
 substrate is the real organism; the mushroom is just its fruiting body.

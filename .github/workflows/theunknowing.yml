@@ -1,0 +1,45 @@
+name: The Unknowing build
+
+on:
+  pull_request:
+    paths:
+      - "theunknowing/**"
+      - ".github/workflows/theunknowing.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      # modinfo.json's dependencies.game pins the Vintage Story version these DLLs must match.
+      - name: Read required game version
+        id: game
+        run: |
+          version=$(node -pe "require('./theunknowing/modinfo.json').dependencies.game")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Vintage Story server files
+        id: cache-vs
+        uses: actions/cache@v4
+        with:
+          path: vs-server
+          key: vs-server-linux-${{ steps.game.outputs.version }}
+
+      # Free, no-login server download - same DLLs (VintagestoryAPI/Lib, Lib/*, Mods/*) as the
+      # full client install, just enough to compile a mod against.
+      - name: Download Vintage Story server files
+        if: steps.cache-vs.outputs.cache-hit != 'true'
+        run: |
+          curl -fSL "https://cdn.vintagestory.at/gamefiles/stable/vs_server_linux-x64_${{ steps.game.outputs.version }}.tar.gz" -o vs_server.tar.gz
+          mkdir -p vs-server
+          tar -C vs-server -xzf vs_server.tar.gz
+
+      - name: Build (Release)
+        env:
+          VINTAGE_STORY: ${{ github.workspace }}/vs-server
+        run: dotnet build theunknowing/TheUnknowingCode/TheUnknowingCode.csproj -c Release

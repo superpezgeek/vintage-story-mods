@@ -11,34 +11,42 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
   </PropertyGroup>
 
+  <!-- $(VINTAGE_STORY) is the modding convention's standard env var for the game install dir
+       (used by CI, see .github/workflows/theunknowing.yml) - falls back to this machine's local
+       install when unset. -->
+  <PropertyGroup>
+    <VintagestoryDir Condition="'$(VINTAGE_STORY)' != ''">$(VINTAGE_STORY)</VintagestoryDir>
+    <VintagestoryDir Condition="'$(VintagestoryDir)' == ''">C:\Users\DJRic\AppData\Roaming\Vintagestory</VintagestoryDir>
+  </PropertyGroup>
+
   <ItemGroup>
     <Reference Include="VintagestoryAPI">
-      <HintPath>C:\Users\DJRic\AppData\Roaming\Vintagestory\VintagestoryAPI.dll</HintPath>
+      <HintPath>$(VintagestoryDir)\VintagestoryAPI.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="VintagestoryLib">
-      <HintPath>C:\Users\DJRic\AppData\Roaming\Vintagestory\VintagestoryLib.dll</HintPath>
+      <HintPath>$(VintagestoryDir)\VintagestoryLib.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="VSSurvivalMod">
-      <HintPath>C:\Users\DJRic\AppData\Roaming\Vintagestory\Mods\VSSurvivalMod.dll</HintPath>
+      <HintPath>$(VintagestoryDir)\Mods\VSSurvivalMod.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <!-- EntityShapeRenderer (TheUnknowingRenderer's base class) lives here, not in VintagestoryAPI. -->
     <Reference Include="VSEssentials">
-      <HintPath>C:\Users\DJRic\AppData\Roaming\Vintagestory\Mods\VSEssentials.dll</HintPath>
+      <HintPath>$(VintagestoryDir)\Mods\VSEssentials.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="0Harmony">
-      <HintPath>C:\Users\DJRic\AppData\Roaming\Vintagestory\Lib\0Harmony.dll</HintPath>
+      <HintPath>$(VintagestoryDir)\Lib\0Harmony.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>C:\Users\DJRic\AppData\Roaming\Vintagestory\Lib\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(VintagestoryDir)\Lib\Newtonsoft.Json.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="protobuf-net">
-      <HintPath>C:\Users\DJRic\AppData\Roaming\Vintagestory\Lib\protobuf-net.dll</HintPath>
+      <HintPath>$(VintagestoryDir)\Lib\protobuf-net.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <!-- Optional soft dependency (see TheUnknowingModSystem.HookConfigLib) - vendored here only
