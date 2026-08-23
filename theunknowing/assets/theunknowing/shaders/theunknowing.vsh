@@ -29,7 +29,7 @@ uniform int skipRenderJointId2;
 // (ElementTransforms.values[jointId]) - deliberately not replicated in this custom shader.
 // Registering it under our own program name left prog.UBOs with no "Animation" entry despite
 // an identical UBO declaration compiling fine (confirmed live - crashed on
-// prog.UBOs["Animation"] with KeyNotFoundException), so StormcloudRenderer instead folds the
+// prog.UBOs["Animation"] with KeyNotFoundException), so TheUnknowingRenderer instead folds the
 // entity's single joint's animated transform into modelMatrix itself, in C#, from
 // entity.AnimManager.Animator.Matrices, before this shader ever sees it - modelMatrix already
 // IS the joint-animated transform by the time it reaches here. jointId is still declared

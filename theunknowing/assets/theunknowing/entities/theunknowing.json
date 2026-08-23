@@ -1,14 +1,14 @@
 {
-	"code": "stormcloud",
+	"code": "theunknowing",
 	"class": "EntityAgent",
 	"tags": ["inanimate"],
 	"hitboxSize": { "x": 12, "y": 320, "z": 12 },
 	"client": {
-		"renderer": "theunknowing:stormcloud",
-		"shape": { "base": "entity/stormcloud" },
+		"renderer": "theunknowing:theunknowing",
+		"shape": { "base": "entity/theunknowing" },
 		"behaviors": [
 			{ "code": "interpolateposition" },
-			{ "code": "theunknowing:infotext", "langCode": "theunknowing:stormcloud-desc" }
+			{ "code": "theunknowing:infotext", "langCode": "theunknowing:theunknowing-desc" }
 		],
 		"animations": [
 			{ "code": "spawn", "animation": "spawn", "animationSpeed": 1.0 },

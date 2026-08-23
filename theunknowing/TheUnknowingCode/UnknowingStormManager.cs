@@ -70,13 +70,13 @@ namespace TheUnknowing
             // no per-particle variation).
             //
             // (63,17,90) is the brightest opaque pixel actually sampled from
-            // textures/entity/stormcloud.png - scaled up to full saturation (max channel = 255)
+            // textures/entity/theunknowing.png - scaled up to full saturation (max channel = 255)
             // that's (179,48,255), a true violet. The original (180,20,90) read as
             // magenta/pink live because its hue (~334 degrees) sits in red-violet, not purple
-            // (~270-290 degrees) - R was too high relative to B for the color the stormcloud
+            // (~270-290 degrees) - R was too high relative to B for the color the storm cloud
             // texture actually uses.
             //
-            // Pool of colors, sampled: scanned every opaque pixel in stormcloud.png and converted
+            // Pool of colors, sampled: scanned every opaque pixel in theunknowing.png and converted
             // to HSV (game's 0-255 scale) - hue sits in a narrow, consistent band (170-198, most
             // of it ~185-198) since it's all the same purple identity, but Value spans almost the
             // whole range (3 to 90 - the texture is mostly near-black void with a few brighter
@@ -225,7 +225,7 @@ namespace TheUnknowing
         }
 
         // Self-healing: ensures every column of every non-Done storm has a live landmark entity
-        // (theunknowing:stormcloud) - a static, tall translucent column meant to solve what
+        // (theunknowing:theunknowing) - a static, tall translucent column meant to solve what
         // particles alone couldn't, something visible from well outside the storm regardless of
         // what's built nearby. Unlike the removed particle-based smoke beacon (see ROADMAP
         // 0.3/reversal), this is a real world object, so it isn't subject to the client's shared
@@ -241,10 +241,10 @@ namespace TheUnknowing
             {
                 if (column.CloudEntityId != 0 && api.World.GetEntityById(column.CloudEntityId) != null) continue;
 
-                EntityProperties? cloudType = api.World.GetEntityType(new AssetLocation("theunknowing", "stormcloud"));
+                EntityProperties? cloudType = api.World.GetEntityType(new AssetLocation("theunknowing", "theunknowing"));
                 if (cloudType == null)
                 {
-                    api.World.Logger.Warning("[TheUnknowing] stormcloud entity type not found, skipping cloud spawn.");
+                    api.World.Logger.Warning("[TheUnknowing] theunknowing:theunknowing entity type not found, skipping cloud spawn.");
                     return;
                 }
 
@@ -266,7 +266,7 @@ namespace TheUnknowing
                 Entity cloudEntity = api.ClassRegistry.CreateEntity(cloudType);
                 cloudEntity.Pos.SetPos(x, groundY, z);
 
-                // "spawn" (see stormcloud's shape/entity JSON) keyframes the column element's
+                // "spawn" (see theunknowing's shape/entity JSON) keyframes the column element's
                 // StretchY from near-0 to 1, pivoted at the element's rotationOrigin (the top of
                 // the column, not the bottom) - so it reads as descending from the sky rather than
                 // growing up from the ground.
@@ -625,11 +625,12 @@ namespace TheUnknowing
         // state.
         //
         // Used to also spawn the void-black "containment wall" fog particles (SpawnFogParticles) -
-        // removed once the stormcloud landmark entity existed to do the "visible from far away"
-        // job instead. The particle wall was a real performance hazard: its density scaled with
-        // chunk-column count, and (confirmed live) it competed with the client's shared particle
-        // render budget under rain badly enough that raising the budget cap 5x didn't fix visible
-        // dropout - only removing rain did. The stormcloud entity has none of that risk (real
+        // removed once the storm cloud landmark entity (theunknowing:theunknowing) existed to do
+        // the "visible from far away" job instead. The particle wall was a real performance
+        // hazard: its density scaled with chunk-column count, and (confirmed live) it competed
+        // with the client's shared particle render budget under rain badly enough that raising
+        // the budget cap 5x didn't fix visible dropout - only removing rain did. The storm cloud
+        // entity has none of that risk (real
         // world object, not particles - see GOTCHAS.md), so there's no reason to keep paying that
         // cost just for atmosphere. Interior fog went with it too, on the same reasoning.
         public void OnFogTick()
@@ -660,9 +661,8 @@ namespace TheUnknowing
             return api.World.BlockAccessor.GetTerrainMapheightAt(new BlockPos((int)(minX + ClaimChunkMath.ChunkSize / 2), 0, (int)(minZ + ClaimChunkMath.ChunkSize / 2)));
         }
 
-        // Small, fast "ember" particles scattered through the storm - reads as purple live
-        // (RGB 180,20,90, closer to crimson/raspberry on paper, but that's not how it actually
-        // renders against the dark background). Color contrast against the stormcloud entity's
+        // Small, fast "ember" particles scattered through the storm - reads as purple live.
+        // Color contrast against the storm cloud entity's (theunknowing:theunknowing)
         // void-black plus fast cosmic-ray streaks (see emberParticles setup in the constructor)
         // is meant to sell "dangerous energy," not just "hazy." Liked live - specifically called
         // out as reading well against the cloud, the purple-against-void contrast selling a
@@ -862,8 +862,8 @@ namespace TheUnknowing
 
         // Debug/testing-only utility - despawns every column's current cloud entity and resets
         // CloudEntityId to 0, without touching the rest of the storm. EnsureCloudsSpawned (next
-        // OnGameTick, within 10s) then spawns fresh ones against whatever the stormcloud entity
-        // type currently looks like. Exists for iterating on the shape/texture without needing a
+        // OnGameTick, within 10s) then spawns fresh ones against whatever the theunknowing:theunknowing
+        // entity type currently looks like. Exists for iterating on the shape/texture without needing a
         // new land claim each time - a shape/geometry change might not be reflected on an
         // already-spawned entity instance, only a freshly spawned one.
         //
@@ -904,7 +904,7 @@ namespace TheUnknowing
             return TextCommandResult.Success($"Despawned {despawned} cloud(s); fresh ones will spawn within the next game tick.{note}");
         }
 
-        // Debug/testing-only utility - despawns any theunknowing:stormcloud entity within range of
+        // Debug/testing-only utility - despawns any theunknowing:theunknowing entity within range of
         // the given position that isn't currently owned by a tracked storm. Exists specifically to
         // clean up clouds orphaned by the old ClearAllStorms/RespawnClouds bug (entities sitting in
         // a chunk that wasn't loaded when those commands ran, whose tracking got discarded anyway)
@@ -921,7 +921,7 @@ namespace TheUnknowing
                 .ToHashSet();
 
             Entity[] nearby = api.World.GetEntitiesAround(position, (float)range, (float)range,
-                e => e.Code.Domain == "theunknowing" && e.Code.Path == "stormcloud");
+                e => e.Code.Domain == "theunknowing" && e.Code.Path == "theunknowing");
 
             int killed = 0;
             foreach (Entity entity in nearby)
@@ -934,7 +934,7 @@ namespace TheUnknowing
 
             int stillTracked = nearby.Length - killed;
             return TextCommandResult.Success(
-                $"Despawned {killed} untracked stormcloud entity/entities within {range:0} blocks" +
+                $"Despawned {killed} untracked storm cloud entity/entities within {range:0} blocks" +
                 (stillTracked > 0 ? $" ({stillTracked} nearby left alone - still owned by a tracked storm)." : "."));
         }
 

@@ -71,8 +71,8 @@ namespace TheUnknowing
         // own responsibility to tune, and it can't hurt anyone by surprise.
         public double FogParticleIntervalSeconds { get; set; } = 2.0;
 
-        // Crimson "ember" particles spawned per column, each burst - color contrast against the
-        // stormcloud entity's void-black, meant to read as active danger rather than plain smoke.
+        // Purple "ember" particles spawned per column, each burst - color contrast against the
+        // storm cloud entity's void-black, meant to read as active danger rather than plain smoke.
         public float EmberParticlesPerColumn { get; set; } = 4f;
 
         // Real-time seconds between ambient dread audio cues - own tick, same restart-to-retune
