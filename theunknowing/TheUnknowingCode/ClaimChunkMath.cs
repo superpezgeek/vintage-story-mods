@@ -9,17 +9,21 @@ namespace TheUnknowing
     {
         public const int ChunkSize = 32;
 
-        // Union of chunk columns touched by every area of every given claim. A single claim can
-        // have multiple disjoint Areas (e.g. an L-shaped base), and a player can own multiple
-        // claims, so this always unions rather than assuming one contiguous cuboid.
+        // Union of chunk columns touched by every area of every given claim, along with the
+        // vertical (Y) span of whichever area(s) touch each column - mob spawning needs this to
+        // land at the claim's own depth rather than the surface (a claim can be an underground
+        // base), so it's carried alongside the X/Z column set rather than discarded like the old
+        // HashSet-only version did. A single claim can have multiple disjoint Areas (e.g. an
+        // L-shaped or multi-level base), and a player can own multiple claims, so both the column
+        // set and each column's Y span are unions, not assuming one contiguous cuboid.
         //
         // Uses arithmetic right-shift rather than division by ChunkSize - integer division
         // truncates toward zero, which gives the wrong chunk index for negative coordinates
         // (-33 / 32 == -1, but chunk -33 is actually in column -2). Shifting rounds toward
         // negative infinity instead, matching how the engine assigns block columns to chunks.
-        public static HashSet<(int ChunkX, int ChunkZ)> GetCoveredChunkColumns(IEnumerable<LandClaim> claims)
+        public static Dictionary<(int ChunkX, int ChunkZ), (int MinY, int MaxY)> GetCoveredChunkColumns(IEnumerable<LandClaim> claims)
         {
-            var columns = new HashSet<(int, int)>();
+            var columns = new Dictionary<(int, int), (int MinY, int MaxY)>();
 
             foreach (LandClaim claim in claims)
             {
@@ -41,7 +45,10 @@ namespace TheUnknowing
                     {
                         for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++)
                         {
-                            columns.Add((chunkX, chunkZ));
+                            var key = (chunkX, chunkZ);
+                            columns[key] = columns.TryGetValue(key, out var existing)
+                                ? (Math.Min(existing.MinY, area.MinY), Math.Max(existing.MaxY, area.MaxY))
+                                : (area.MinY, area.MaxY);
                         }
                     }
                 }

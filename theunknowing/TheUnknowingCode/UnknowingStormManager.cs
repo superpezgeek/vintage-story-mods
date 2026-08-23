@@ -175,7 +175,7 @@ namespace TheUnknowing
                 return TextCommandResult.Error($"'{playerName}' has no land claims.");
             }
 
-            HashSet<(int ChunkX, int ChunkZ)> columns = ClaimChunkMath.GetCoveredChunkColumns(claims);
+            Dictionary<(int ChunkX, int ChunkZ), (int MinY, int MaxY)> columns = ClaimChunkMath.GetCoveredChunkColumns(claims);
 
             // A claim can exist with zero Areas (e.g. every area removed via /land removearea but
             // the claim record itself left behind) - claims.Count > 0 above doesn't rule that out.
@@ -204,7 +204,7 @@ namespace TheUnknowing
                 GatheringStrengthDurationMinutes = config.GatheringStrengthDurationMinutes,
                 EnteringRealityDurationMinutes = config.EnteringRealityDurationMinutes,
                 Status = UnknowingStormStatus.GatheringStrength,
-                ChunkColumns = columns.Select(c => new ChunkColumn(c.ChunkX, c.ChunkZ)).ToList()
+                ChunkColumns = columns.Select(c => new ChunkColumn(c.Key.ChunkX, c.Key.ChunkZ, c.Value.MinY, c.Value.MaxY)).ToList()
             };
 
             storms.Add(storm);
@@ -565,21 +565,21 @@ namespace TheUnknowing
         // error to catch it. /wgen regenrange takes explicit chunk coordinates instead, with no
         // such fallback, so it's the only safe choice here.
         //
-        // Uses the min/max bounding rectangle of storm.ChunkColumns rather than looping
-        // regenrange once per exact column - a claim with multiple disjoint Areas could regen a
-        // few extra chunks beyond what was actually claimed, but that's preferable to repeating
-        // regenrange's own "pause chunk gen thread, reload worldgen assets" overhead once per
-        // column, and a slightly wider wipe reads fine thematically ("The Unknowing consumes the
-        // area"). Matches the original plan's own "minimum enclosing radius" approach, just
-        // rectangular instead of circular.
+        // Uses the min/max bounding rectangle of each connected *cluster* of chunk columns
+        // (see ClusterChunkColumns), rather than one box over storm.ChunkColumns as a whole - a
+        // storm bundles every claim a player owns (see StartStorm's claims list), and two
+        // separate claims can be anywhere on the map relative to each other, unlike multiple
+        // Areas within one claim (the /land command requires those to be adjacent). A single
+        // combined bounding box across two far-apart claims would regenrange every chunk of
+        // unrelated, unclaimed terrain in between them too - confirmed live via a test with two
+        // claims ~2000 blocks apart, where the combined box came out to roughly 500 chunk
+        // columns. Clustering first keeps each regenrange call scoped to one real blob of
+        // claimed ground - for the common case (one claim, or several adjacent claims/areas)
+        // that's still exactly one call with the same box as before; only genuinely separate
+        // claims now get their own, tighter calls instead of being merged.
         private void RegenClaimedChunks(UnknowingStorm storm)
         {
             if (storm.ChunkColumns.Count == 0) return;
-
-            int minX = storm.ChunkColumns.Min(c => c.ChunkX);
-            int maxX = storm.ChunkColumns.Max(c => c.ChunkX);
-            int minZ = storm.ChunkColumns.Min(c => c.ChunkZ);
-            int maxZ = storm.ChunkColumns.Max(c => c.ChunkZ);
 
             var caller = new Caller
             {
@@ -590,11 +590,63 @@ namespace TheUnknowing
             };
 
             string playerName = storm.TargetPlayerName;
-            api.ChatCommands.ExecuteUnparsed(
-                $"/wgen regenrange {minX} {minZ} {maxX} {maxZ}",
-                new TextCommandCallingArgs { Caller = caller },
-                result => api.World.Logger.Notification(
-                    $"[TheUnknowing] wgen regenrange for '{playerName}' ({minX},{minZ})-({maxX},{maxZ}): {result.StatusMessage}"));
+
+            foreach (List<ChunkColumn> cluster in ClusterChunkColumns(storm.ChunkColumns))
+            {
+                int minX = cluster.Min(c => c.ChunkX);
+                int maxX = cluster.Max(c => c.ChunkX);
+                int minZ = cluster.Min(c => c.ChunkZ);
+                int maxZ = cluster.Max(c => c.ChunkZ);
+
+                api.ChatCommands.ExecuteUnparsed(
+                    $"/wgen regenrange {minX} {minZ} {maxX} {maxZ}",
+                    new TextCommandCallingArgs { Caller = caller },
+                    result => api.World.Logger.Notification(
+                        $"[TheUnknowing] wgen regenrange for '{playerName}' ({minX},{minZ})-({maxX},{maxZ}): {result.StatusMessage}"));
+            }
+        }
+
+        // Standard flood-fill connected-components over the chunk grid, 8-directional (a shared
+        // corner counts as adjacent, not just a shared edge) - lenient enough that a claim shaped
+        // like two blocks touching only at a corner still regens as one cluster/one call, while
+        // anything with an actual gap (the far-apart-claims case this exists for) reliably ends
+        // up in separate clusters.
+        private static List<List<ChunkColumn>> ClusterChunkColumns(List<ChunkColumn> columns)
+        {
+            var byPos = columns.ToDictionary(c => (c.ChunkX, c.ChunkZ));
+            var visited = new HashSet<(int, int)>();
+            var clusters = new List<List<ChunkColumn>>();
+
+            foreach (ChunkColumn start in columns)
+            {
+                var startKey = (start.ChunkX, start.ChunkZ);
+                if (!visited.Add(startKey)) continue;
+
+                var cluster = new List<ChunkColumn> { start };
+                var queue = new Queue<(int ChunkX, int ChunkZ)>();
+                queue.Enqueue(startKey);
+
+                while (queue.Count > 0)
+                {
+                    (int x, int z) = queue.Dequeue();
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+                        for (int dz = -1; dz <= 1; dz++)
+                        {
+                            if (dx == 0 && dz == 0) continue;
+                            var neighborKey = (x + dx, z + dz);
+                            if (!byPos.TryGetValue(neighborKey, out ChunkColumn? neighbor)) continue;
+                            if (!visited.Add(neighborKey)) continue;
+                            cluster.Add(neighbor);
+                            queue.Enqueue(neighborKey);
+                        }
+                    }
+                }
+
+                clusters.Add(cluster);
+            }
+
+            return clusters;
         }
 
         // Registered on its own real-time tick by TheUnknowingModSystem, at
@@ -785,7 +837,15 @@ namespace TheUnknowing
             int interiorSpan = ClaimChunkMath.ChunkSize - 2 * SpawnEdgeMarginBlocks;
             int blockX = column.ChunkX * ClaimChunkMath.ChunkSize + SpawnEdgeMarginBlocks + api.World.Rand.Next(interiorSpan);
             int blockZ = column.ChunkZ * ClaimChunkMath.ChunkSize + SpawnEdgeMarginBlocks + api.World.Rand.Next(interiorSpan);
-            int groundY = api.World.BlockAccessor.GetTerrainMapheightAt(new BlockPos(blockX, 0, blockZ));
+
+            // The claim's own recorded Y span (see ClaimChunkMath.GetCoveredChunkColumns), not the
+            // surface heightmap - an underground base's claim area is well below
+            // GetTerrainMapheightAt, and spawning there via the surface would put every enemy far
+            // from whatever it's actually supposed to be threatening. The cloud landmark and ember
+            // particles stay surface-only (deliberate - see 2026-08-23 audit), but mobs are the
+            // actual threat and need to land at the claim's own depth.
+            int startY = column.ClaimMinY + api.World.Rand.Next(Math.Max(1, column.ClaimMaxY - column.ClaimMinY + 1));
+            int spawnY = FindGroundY(blockX, blockZ, column.ClaimMinY, column.ClaimMaxY, startY);
 
             string entityCode = pool[api.World.Rand.Next(pool.Count)];
             EntityProperties? entityType = api.World.GetEntityType(new AssetLocation(entityCode));
@@ -796,16 +856,47 @@ namespace TheUnknowing
             }
 
             Entity entity = api.ClassRegistry.CreateEntity(entityType);
-            entity.Pos.SetPos(blockX + 0.5, groundY + 1, blockZ + 0.5);
+            entity.Pos.SetPos(blockX + 0.5, spawnY, blockZ + 0.5);
             api.World.SpawnEntity(entity);
 
             storm.SpawnedEntityIds.Add(entity.EntityId);
 
             api.World.Logger.Notification(
                 $"[TheUnknowing] [MobSpawn] entity='{entityCode}' id={entity.EntityId} storm='{storm.TargetPlayerName}' " +
-                $"phase={storm.Status} pos=({blockX},{groundY + 1},{blockZ}) stormCount={storm.SpawnedEntityIds.Count}/{cap} totalTracked={TotalTrackedEntities()}");
+                $"phase={storm.Status} pos=({blockX},{spawnY},{blockZ}) stormCount={storm.SpawnedEntityIds.Count}/{cap} totalTracked={TotalTrackedEntities()}");
 
             return true;
+        }
+
+        // Finds actual solid ground within the claim's own recorded Y span, rather than trusting
+        // startY (a blind random draw across the whole span) directly - a claim area is a
+        // selection box, and players routinely "grow" it upward for headroom well past the real
+        // floor (e.g. a claim saved at floor height then grown up 20 blocks), so most of that
+        // span is open air above the one real floor, not standable ground. Confirmed live: mobs
+        // spawning mid-air and falling to their death before this existed. Scans downward from
+        // startY first (the common case - most of the span is headroom above a single floor
+        // below the draw), then upward as a fallback for a genuinely multi-level claim where the
+        // draw landed below every floor. Falls back to minY + 1 (matches the old single-floor
+        // assumption) if no solid ground is found in either direction at all, e.g. the drawn X/Z
+        // happens to sit over a shaft or stairwell hole - same "never let a missing case crash
+        // the spawn" posture as the entity-type lookup below.
+        private int FindGroundY(int blockX, int blockZ, int minY, int maxY, int startY)
+        {
+            for (int y = startY; y >= minY; y--)
+            {
+                if (api.World.BlockAccessor.GetBlock(new BlockPos(blockX, y, blockZ)).SideSolid[BlockFacing.UP.Index])
+                {
+                    return y + 1;
+                }
+            }
+            for (int y = startY + 1; y <= maxY; y++)
+            {
+                if (api.World.BlockAccessor.GetBlock(new BlockPos(blockX, y, blockZ)).SideSolid[BlockFacing.UP.Index])
+                {
+                    return y + 1;
+                }
+            }
+            return minY + 1;
         }
 
         // Debug/testing-only utility - despawns every entity every tracked storm owns and clears

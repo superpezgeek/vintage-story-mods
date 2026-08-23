@@ -85,12 +85,25 @@ namespace TheUnknowing
         [ProtoMember(3)]
         public long CloudEntityId { get; set; }
 
+        // The Y span (world coordinates) of whichever claim area(s) originally touched this
+        // column, captured at storm creation (see ClaimChunkMath.GetCoveredChunkColumns) - mobs
+        // spawn somewhere in this range (see UnknowingStormManager.TrySpawnOne) rather than at
+        // the surface, so an underground base still gets threatened at its own depth instead of
+        // by monsters wandering a cloud-and-embers show happening far above it.
+        [ProtoMember(4)]
+        public int ClaimMinY { get; set; }
+
+        [ProtoMember(5)]
+        public int ClaimMaxY { get; set; }
+
         public ChunkColumn() { }
 
-        public ChunkColumn(int chunkX, int chunkZ)
+        public ChunkColumn(int chunkX, int chunkZ, int claimMinY, int claimMaxY)
         {
             ChunkX = chunkX;
             ChunkZ = chunkZ;
+            ClaimMinY = claimMinY;
+            ClaimMaxY = claimMaxY;
         }
     }
 }
