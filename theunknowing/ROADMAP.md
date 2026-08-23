@@ -108,9 +108,10 @@ things tried and reversed.
       against an L-shaped claim (the concave case the centroid fallback
       exists for).
 - [x] More erratic ember particle motion.
-- [x] New ambient audio - currently still reusing the game's own
-      `game:sounds/effect/rift.ogg`, never replaced with something
-      custom.
+- [x] New ambient audio - replaced the game's own `rift.ogg` with a
+      custom looping `unknowing-storm.ogg` track, played via
+      `StartTrack`/`ForceActive` rather than a raw `PlaySoundAt` (see
+      the music comment in `TheUnknowingModSystem.cs`).
 - [x] Test underground claim (does terrain-height-based positioning
       for the cloud/particles/spawns still make sense if the claim
       itself is underground?).
@@ -119,17 +120,22 @@ things tried and reversed.
       claim a player owns, but this has never actually been confirmed
       live against a player with more than one claim.
 
-## Ideas (not scheduled)
+## 0.6 — audits, demo mode, cleanup
 
-- **Demo/RP mode** — a separate command (e.g. `/unknowing-storm-demo
-      <radius>`) that summons the storm's presence (spawns, VFX) around
-      an arbitrary point with **no claim involved at all** — doesn't
-      touch any land claim, doesn't regen anything after. Intended use:
-      Dream Realms RP's first planned community event (a town-hall-style
-      player meetup) — summon it live as a storytelling beat, where
-      players narratively "drive it away" by shouting out things they
-      remember, ending the encounter without any real consequence to
-      anyone's base. Genuinely a different mode from the main lifecycle
-      (no suppression, no regen), not just a flag on the real one —
-      revisit as its own small feature once the main storm loop is
-      solid.
+- [x] Mob-spawn audit - fixed enemies being despawned as "out of bounds"
+      almost immediately after spawning (were landing too close to a
+      column's edge).
+- [x] Code comments cleaned up across every source file - long inline
+      debugging narratives moved to `NOTES.local.md`, only short
+      WHY-notes kept in code.
+- [x] Two debug-only chat commands removed
+      (`/unknowing-storm-respawn-clouds`, `/unknowing-storm-kill-nearby`)
+      - both existed for problems since fixed at the root.
+- [x] Demo/RP mode: `/unknowing-demo <player>` spawns the storm cloud +
+      ember particles on the target's current chunk - no claim touched,
+      no state progression, no enemy spawns - until `/unknowing-demo
+      kill` ends it. Narrower than the original "Ideas" pitch below
+      (single chunk on a player, not an arbitrary-point radius), built
+      for Dream Realms RP's first town-hall event. See `NOTES.local.md`
+      for the implementation approach (reuses the real storm pipeline
+      via a new `IsDemo` flag rather than a separate system).

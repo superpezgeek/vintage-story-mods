@@ -6,12 +6,9 @@ using Vintagestory.API.Datastructures;
 
 namespace TheUnknowing
 {
-    // Vintage Story entities have no built-in JSON "description" field the way items/blocks do -
-    // the hover tooltip (GetInfoText) is purely an aggregation of whatever each behavior
-    // contributes (health, generation, etc. - see EntityAgent/Entity.GetInfoText in vsapi). This
-    // behavior exists solely to append one Lang.Get'd line of flavor text below the entity's
-    // name. Reads its lang key from JSON ("langCode") rather than hardcoding the storm cloud's text,
-    // in case a future entity in this mod wants the same treatment.
+    // Entities have no built-in JSON "description" field the way items/blocks do - GetInfoText is
+    // purely an aggregation of whatever each behavior contributes. Reads its lang key from JSON
+    // ("langCode") rather than hardcoding one entity's text, so any entity can reuse it.
     public class EntityBehaviorInfoText : EntityBehavior
     {
         private string langCode = "";
