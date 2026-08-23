@@ -30,6 +30,14 @@ namespace TheUnknowing
         private readonly IServerNetworkChannel channel;
         private readonly List<UnknowingStorm> storms;
 
+        // Cached rather than rebuilt per SpawnEmberParticles call (same pattern as the base
+        // game's firefly/rust-mote ambient particles) - basePos and Quantity are the only
+        // fields that vary per column per tick, everything else (color, velocity range, the
+        // trail SecondaryParticles) is fixed for the mod's lifetime. AdvancedParticleProperties
+        // rather than SimpleParticleProperties specifically because trails need SecondaryParticles,
+        // which only the Advanced variant supports.
+        private readonly AdvancedParticleProperties emberParticles;
+
         // Player UIDs currently believed (server-side) to be inside some storm's chunk bounds -
         // not persisted, rebuilt from scratch (as empty) on every server start, since it's purely
         // a "did this change since last check" cache driving InStormPacket, not real state.
@@ -41,6 +49,107 @@ namespace TheUnknowing
             this.config = config;
             this.channel = channel;
             storms = api.WorldManager.SaveGame.GetData(SaveDataKey, new List<UnknowingStorm>());
+
+            // Went through a "make it vibrate" pass first (RandomVelocityChange re-rolling
+            // in-flight) - confirmed live that just made particles wander aimlessly rather than
+            // read as erratic. What actually landed: cosmic-ray streaks. Each particle draws ONE
+            // random velocity at spawn from a wide range (so different particles shoot off at
+            // wildly different speeds/angles) and then flies straight - no in-flight re-roll, so
+            // each streak reads as a single fast arrival rather than a wobble. All three axes use
+            // the same range so direction is unbiased (sideways/up/down all equally likely, not
+            // just horizontal) - an uneven Y range here was the earlier bug.
+            //
+            // PosOffset X/Z spans the full chunk-column footprint (ChunkSize wide, centered at
+            // ChunkSize/2 so it covers 0..ChunkSize) the same way MinPos/AddPos used to for
+            // SimpleParticleProperties - basePos below is set to each column's near corner per
+            // call, and this offset spreads spawns across the rest of the column.
+            // AdvancedParticleProperties.Color is never actually sent to the client - ToBytes
+            // only serializes HsvaColor, unconditionally indexing all 4 elements, so leaving
+            // HsvaColor null crashed ToBytes with an NPE the moment this reached
+            // ServerMain.SpawnParticles. Has to be expressed as HSV instead (var 0 = exact color,
+            // no per-particle variation).
+            //
+            // (63,17,90) is the brightest opaque pixel actually sampled from
+            // textures/entity/stormcloud.png - scaled up to full saturation (max channel = 255)
+            // that's (179,48,255), a true violet. The original (180,20,90) read as
+            // magenta/pink live because its hue (~334 degrees) sits in red-violet, not purple
+            // (~270-290 degrees) - R was too high relative to B for the color the stormcloud
+            // texture actually uses.
+            //
+            // Pool of colors, sampled: scanned every opaque pixel in stormcloud.png and converted
+            // to HSV (game's 0-255 scale) - hue sits in a narrow, consistent band (170-198, most
+            // of it ~185-198) since it's all the same purple identity, but Value spans almost the
+            // whole range (3 to 90 - the texture is mostly near-black void with a few brighter
+            // veins). Reproducing that: tight hue/saturation variance around the sampled peak
+            // color, wide Value variance (0-255, so it can land on near-black same as the darkest
+            // texture pixels) - this is what gives "some particles are black" for free, it's the
+            // same channel that's already doing most of the work in the source texture. Shared
+            // NatFloat instances (stateless generators, safe to reuse) so the trail dots below
+            // draw from the identical pool rather than a separately-tuned one.
+            int[] emberHsv = ColorUtil.RgbToHsvInts(179, 48, 255);
+            NatFloat emberHueNat = NatFloat.createUniform(emberHsv[0], 12);
+            NatFloat emberSatNat = NatFloat.createUniform(emberHsv[1], 25);
+            NatFloat emberValNat = NatFloat.createUniform(128, 128);
+            emberParticles = new AdvancedParticleProperties
+            {
+                HsvaColor = new NatFloat[]
+                {
+                    emberHueNat,
+                    emberSatNat,
+                    emberValNat,
+                    NatFloat.createUniform(200, 0),
+                },
+                // Each axis is an independent uniform draw in [-var, var] (avg 0, so direction
+                // stays unbiased). var is the only speed knob available without a custom
+                // direction/magnitude sampler - it sets BOTH the ceiling and the floor, so
+                // narrowing the gap between "fast" and "really fast" means narrowing this rather
+                // than raising a separate minimum (there isn't one; a lower minimum would mean
+                // biasing away from zero on some axes, which biases direction instead of speed).
+                Velocity = new NatFloat[]
+                {
+                    NatFloat.createUniform(0f, 3.2f),
+                    NatFloat.createUniform(0f, 3.2f),
+                    NatFloat.createUniform(0f, 3.2f),
+                },
+                PosOffset = new NatFloat[]
+                {
+                    NatFloat.createUniform(ClaimChunkMath.ChunkSize / 2f, ClaimChunkMath.ChunkSize / 2f),
+                    NatFloat.createUniform(2f, 2f),
+                    NatFloat.createUniform(ClaimChunkMath.ChunkSize / 2f, ClaimChunkMath.ChunkSize / 2f),
+                },
+                LifeLength = NatFloat.createUniform(3f, 0f),
+                GravityEffect = NatFloat.createUniform(0f, 0f),
+                Size = NatFloat.createUniform(0.4f, 0f),
+                ParticleModel = EnumParticleModel.Quad,
+                RandomVelocityChange = false,
+
+                // The trail: a small dim dot dropped every 0.03s of the parent's flight,
+                // stationary (zero velocity) and fading out fast - marks where the streak has
+                // been without following it, the same SecondaryParticles pattern the base game
+                // uses for ExplosionFireTrailCubicles.
+                SecondaryParticles = new AdvancedParticleProperties[]
+                {
+                    new AdvancedParticleProperties
+                    {
+                        HsvaColor = new NatFloat[]
+                        {
+                            emberHueNat,
+                            emberSatNat,
+                            emberValNat,
+                            NatFloat.createUniform(160, 0),
+                        },
+                        Velocity = new NatFloat[] { NatFloat.Zero, NatFloat.Zero, NatFloat.Zero },
+                        Quantity = NatFloat.createUniform(1f, 0f),
+                        Size = NatFloat.createUniform(0.18f, 0.03f),
+                        LifeLength = NatFloat.createUniform(0.3f, 0f),
+                        GravityEffect = NatFloat.createUniform(0f, 0f),
+                        OpacityEvolve = EvolvingNatFloat.create(EnumTransformFunction.QUADRATIC, -16f),
+                        SecondarySpawnInterval = NatFloat.createUniform(0.03f, 0f),
+                        ParticleModel = EnumParticleModel.Quad,
+                        TerrainCollision = false,
+                    }
+                },
+            };
         }
 
         // Resolves the name through PlayerData (the persistent per-player record, populated at
@@ -554,24 +663,19 @@ namespace TheUnknowing
         // Small, fast "ember" particles scattered through the storm - reads as purple live
         // (RGB 180,20,90, closer to crimson/raspberry on paper, but that's not how it actually
         // renders against the dark background). Color contrast against the stormcloud entity's
-        // void-black plus quick, erratic motion is meant to sell "dangerous energy," not just
-        // "hazy." Liked live - specifically called out as reading well against the cloud, the
-        // purple-against-void contrast selling a "cosmic destruction" feel.
+        // void-black plus fast cosmic-ray streaks (see emberParticles setup in the constructor)
+        // is meant to sell "dangerous energy," not just "hazy." Liked live - specifically called
+        // out as reading well against the cloud, the purple-against-void contrast selling a
+        // "cosmic destruction" feel.
         private void SpawnEmberParticles(ChunkColumn column, int groundY, float particlesPerColumn)
         {
             double minX = column.ChunkX * ClaimChunkMath.ChunkSize;
             double minZ = column.ChunkZ * ClaimChunkMath.ChunkSize;
-            double maxX = minX + ClaimChunkMath.ChunkSize;
-            double maxZ = minZ + ClaimChunkMath.ChunkSize;
 
-            Vec3d minPos = new Vec3d(minX, groundY, minZ);
-            Vec3d maxPos = new Vec3d(maxX, groundY + 4, maxZ);
-            Vec3f minVelocity = new Vec3f(-0.06f, 0.02f, -0.06f);
-            Vec3f maxVelocity = new Vec3f(0.06f, 0.1f, 0.06f);
-            int color = ColorUtil.ColorFromRgba(180, 20, 90, 200);
+            emberParticles.basePos.Set(minX, groundY, minZ);
+            emberParticles.Quantity = NatFloat.createUniform(particlesPerColumn, 0f);
 
-            api.World.SpawnParticles(particlesPerColumn, color, minPos, maxPos, minVelocity, maxVelocity,
-                lifeLength: 3f, gravityEffect: 0f, scale: 0.4f, EnumParticleModel.Quad, dualCallByPlayer: null);
+            api.World.SpawnParticles(emberParticles, dualCallByPlayer: null);
         }
 
         // Registered on its own real-time tick by TheUnknowingModSystem, at

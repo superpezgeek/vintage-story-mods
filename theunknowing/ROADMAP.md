@@ -107,7 +107,7 @@ things tried and reversed.
       then a snap-vs-seam precision issue) — confirmed live, including
       against an L-shaped claim (the concave case the centroid fallback
       exists for).
-- [ ] More erratic ember particle motion.
+- [x] More erratic ember particle motion.
 - [ ] New ambient audio - currently still reusing the game's own
       `game:sounds/effect/rift.ogg`, never replaced with something
       custom.
