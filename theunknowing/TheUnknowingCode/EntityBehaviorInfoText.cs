@@ -10,7 +10,7 @@ namespace TheUnknowing
     // the hover tooltip (GetInfoText) is purely an aggregation of whatever each behavior
     // contributes (health, generation, etc. - see EntityAgent/Entity.GetInfoText in vsapi). This
     // behavior exists solely to append one Lang.Get'd line of flavor text below the entity's
-    // name. Reads its lang key from JSON ("langCode") rather than hardcoding stormcloud's text,
+    // name. Reads its lang key from JSON ("langCode") rather than hardcoding the storm cloud's text,
     // in case a future entity in this mod wants the same treatment.
     public class EntityBehaviorInfoText : EntityBehavior
     {

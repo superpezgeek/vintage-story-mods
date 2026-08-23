@@ -24,7 +24,7 @@ namespace TheUnknowing
         private float fogFadeSeconds = 2.5f;
 
         // Runs on both sides before Entities/Blocks/Items are loaded from JSON - custom entity
-        // behavior classes referenced by code (e.g. stormcloud.json's "theunknowing:infotext")
+        // behavior classes referenced by code (e.g. theunknowing.json's "theunknowing:infotext")
         // need to be registered here, not in StartServerSide/StartClientSide (those run after).
         public override void Start(ICoreAPI api)
         {
@@ -72,7 +72,7 @@ namespace TheUnknowing
                 .HandleWith(_ => stormManager.ClearAllStorms());
 
             api.ChatCommands.Create("unknowing-storm-respawn-clouds")
-                .WithDescription("Debug/testing only: despawns every storm's cloud entities and lets them respawn fresh within one game tick - use after changing the stormcloud shape/texture to avoid testing against stale entity instances.")
+                .WithDescription("Debug/testing only: despawns every storm's cloud entities and lets them respawn fresh within one game tick - use after changing the storm cloud shape/texture to avoid testing against stale entity instances.")
                 .RequiresPrivilege(Privilege.controlserver)
                 .HandleWith(_ => stormManager.RespawnClouds());
 
@@ -82,7 +82,7 @@ namespace TheUnknowing
                 .HandleWith(_ => stormManager.DumpStormStatus());
 
             api.ChatCommands.Create("unknowing-storm-kill-nearby")
-                .WithDescription("Debug/testing only: despawns any stormcloud entity within range of the caller that isn't currently owned by a tracked storm - for cleaning up orphaned clouds (e.g. left behind by a chunk that wasn't loaded when /unknowing-storm-clear or /unknowing-storm-respawn-clouds ran).")
+                .WithDescription("Debug/testing only: despawns any theunknowing:theunknowing entity within range of the caller that isn't currently owned by a tracked storm - for cleaning up orphaned clouds (e.g. left behind by a chunk that wasn't loaded when /unknowing-storm-clear or /unknowing-storm-respawn-clouds ran).")
                 .RequiresPrivilege(Privilege.controlserver)
                 .WithArgs(api.ChatCommands.Parsers.OptionalDouble("range", 64))
                 .HandleWith(args => stormManager.KillNearbyClouds(args.Caller.Pos, (double)args[0]));
@@ -101,7 +101,7 @@ namespace TheUnknowing
             // etc. renderer classes are registered (vsessentialsmod Core.StartClientSide) -
             // unlike entity behavior classes, renderer class resolution isn't tied to
             // Entities-load-from-JSON timing, so this is safe alongside everything else here.
-            api.RegisterEntityRendererClass("theunknowing:stormcloud", typeof(StormcloudRenderer));
+            api.RegisterEntityRendererClass("theunknowing:theunknowing", typeof(TheUnknowingRenderer));
 
             // Color/density/brightness are a first-pass guess, expect these to need retuning once
             // seen live (same as every other numeric value in this mod so far).

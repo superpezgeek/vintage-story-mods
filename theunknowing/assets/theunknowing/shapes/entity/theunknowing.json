@@ -6,8 +6,8 @@
 		"top": [24, 24]
 	},
 	"textures": {
-		"cloud": "entity/stormcloud",
-		"top": "entity/stormcloud_top"
+		"cloud": "entity/theunknowing",
+		"top": "entity/theunknowing_top"
 	},
 	"elements": [
 		{

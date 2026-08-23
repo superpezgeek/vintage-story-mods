@@ -45,9 +45,9 @@ uniform float depthOffset;
 // "cloud" face's own sub-rectangle inside the shared EntityTextureAtlas - rather than
 // wrapping the whole atlas, which would scroll into other entities' textures once the
 // offset crossed our sub-rect's edge. entityTexVBounds is set from
-// StormcloudRenderer.this["cloud"] (a TextureAtlasPosition, atlas-normalized 0-1) each
+// TheUnknowingRenderer.this["cloud"] (a TextureAtlasPosition, atlas-normalized 0-1) each
 // frame; uvScrollOffset is a plain 0-1 ramp (fraction of one full loop) advanced by
-// StormcloudRenderer from real elapsed time, independent of the atlas layout. Faces
+// TheUnknowingRenderer from real elapsed time, independent of the atlas layout. Faces
 // outside these bounds (the "top" cap) fall through unscrolled - see the bounds check
 // below, not a texture-wide effect.
 uniform float uvScrollOffset = 0.0;

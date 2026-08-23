@@ -6,8 +6,8 @@ using Vintagestory.GameContent;
 
 namespace TheUnknowing
 {
-    // Registered in place of the stock "Shape" renderer for theunknowing:stormcloud (see
-    // TheUnknowingModSystem.StartClientSide and stormcloud.json's "renderer" field) - everything
+    // Registered in place of the stock "Shape" renderer for theunknowing:theunknowing (see
+    // TheUnknowingModSystem.StartClientSide and theunknowing.json's "renderer" field) - everything
     // about tesselation, mesh upload, and the spawn/widen keyframe animations is still handled by
     // the EntityShapeRenderer base class unchanged. The only thing this class adds is a
     // continuously scrolling nebula texture, which the base class's shared "entityanimated"
@@ -18,7 +18,7 @@ namespace TheUnknowing
     // Rather than rotating the mesh (tried and rejected - it reads as the box turning, not the
     // nebula churning, since all 4 side faces show the exact same static art), this scrolls the
     // sampled UV coordinate over time in a custom fragment shader
-    // (assets/theunknowing/shaders/unknowingstormcloud.fsh, a copy of the stock entityanimated.fsh
+    // (assets/theunknowing/shaders/theunknowing.fsh, a copy of the stock entityanimated.fsh
     // plus that one addition). The vertex shader is a copy of entityanimated.vsh with its
     // Animation UBO lookup removed - see the comment above the constructor for why, and why
     // "column" gets a real joint (1, not 0) despite the shape never declaring one explicitly.
@@ -36,9 +36,9 @@ namespace TheUnknowing
     // whichever Shape-rendered entity the engine batches next isn't affected. Losing the batching
     // optimization for just this swap is a non-issue: at most a handful of these entities exist
     // at once (one per storm chunk column).
-    public class StormcloudRenderer : EntityShapeRenderer
+    public class TheUnknowingRenderer : EntityShapeRenderer
     {
-        private const string ShaderName = "unknowingstormcloud";
+        private const string ShaderName = "theunknowing";
 
         // Real seconds for the starfield to scroll through one full texture-height loop -
         // deliberately not exposed in UnknowingConfig yet (unlike every other tunable in this
@@ -59,12 +59,12 @@ namespace TheUnknowing
         // 0-1 fraction of one full scroll loop, advanced from real elapsed time and wrapped every
         // frame - kept independent of the atlas's actual sub-rect size (entityTexVBounds) so this
         // class never needs to know atlas layout; the shader multiplies it back out (see
-        // unknowingstormcloud.fsh).
+        // theunknowing.fsh).
         private float scrollProgress;
 
         // Scratch buffers for folding the "column" element's animated transform (spawn/widen's
         // stretch keyframes) into modelMatrix ourselves before upload - see the comment on
-        // "modelMatrix" in unknowingstormcloud.vsh for why this replaces the stock shader's
+        // "modelMatrix" in theunknowing.vsh for why this replaces the stock shader's
         // Animation UBO lookup. Reused every frame rather than allocated fresh.
         //
         // Reads entity.AnimManager.Animator.Matrices[jointOffset..], NOT
@@ -94,7 +94,7 @@ namespace TheUnknowing
             jointMatrixOffset = (columnElement?.JointId ?? 0) * 16;
         }
 
-        public StormcloudRenderer(Entity entity, ICoreClientAPI api) : base(entity, api)
+        public TheUnknowingRenderer(Entity entity, ICoreClientAPI api) : base(entity, api)
         {
             shaderProgram ??= LoadShader(api);
         }
@@ -122,7 +122,7 @@ namespace TheUnknowing
             shaderReady = prog.Compile();
             if (!shaderReady)
             {
-                api.Logger.Error("[TheUnknowing] {0} shader failed to compile - stormcloud will render without the UV scroll (stock shader fallback).", ShaderName);
+                api.Logger.Error("[TheUnknowing] {0} shader failed to compile - the storm cloud entity will render without the UV scroll (stock shader fallback).", ShaderName);
             }
             return prog;
         }
