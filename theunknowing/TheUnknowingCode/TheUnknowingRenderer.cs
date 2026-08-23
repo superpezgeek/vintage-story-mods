@@ -47,6 +47,13 @@ namespace TheUnknowing
 
         private static IShaderProgram? shaderProgram;
 
+        // Guards the ReloadShader subscription below to exactly once per client session - this
+        // class is instantiated per entity (one per storm chunk column), but shaderProgram is
+        // intentionally a single static instance shared across all of them (see LoadShader's
+        // single RegisterFileShaderProgram call), so the reload hook only needs registering once
+        // too, not once per entity.
+        private static bool reloadHookRegistered;
+
         // False until LoadShader confirms the custom shader actually compiled - our fsh/vsh
         // #include several stock files that live in the "game" asset domain (oit.fsh,
         // noise3d.ash, etc.) while our own shader is registered under "theunknowing"; whether
@@ -96,6 +103,22 @@ namespace TheUnknowing
 
         public TheUnknowingRenderer(Entity entity, ICoreClientAPI api) : base(entity, api)
         {
+            if (!reloadHookRegistered)
+            {
+                reloadHookRegistered = true;
+
+                // The engine disposes and recompiles every registered shader program when the
+                // player changes graphics settings (see IClientEventAPI.ReloadShader) - without
+                // this, our static shaderProgram reference goes stale the instant that happens,
+                // and the next DoRender3DOpaqueBatched call throws "Can't use a disposed
+                // shader!" trying to Use() it. Confirmed live via a client crash, 2026-08-23.
+                api.Event.ReloadShader += () =>
+                {
+                    shaderProgram = LoadShader(api);
+                    return shaderReady;
+                };
+            }
+
             shaderProgram ??= LoadShader(api);
         }
 
