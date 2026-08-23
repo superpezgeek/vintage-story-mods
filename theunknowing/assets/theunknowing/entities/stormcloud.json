@@ -4,7 +4,7 @@
 	"tags": ["inanimate"],
 	"hitboxSize": { "x": 12, "y": 320, "z": 12 },
 	"client": {
-		"renderer": "Shape",
+		"renderer": "theunknowing:stormcloud",
 		"shape": { "base": "entity/stormcloud" },
 		"behaviors": [
 			{ "code": "interpolateposition" },

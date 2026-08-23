@@ -16,6 +16,15 @@ namespace TheUnknowing
     {
         private const string SaveDataKey = "theunknowing:storms";
 
+        // Multiplied against the cloud's texture in-shader (texColor *= color, see
+        // entityanimated.fsh) - the near-white star pixels take on this hue directly, while the
+        // near-black background stays near-black regardless of tint, so this alone turns a white
+        // starfield into a purple one with no texture swap needed. Applied once, on the
+        // GatheringStrength -> EnteringReality transition (see
+        // TriggerEnteringRealityCloudEffects) - never reverted, since the cloud entity is despawned
+        // outright once the storm reaches Collapsing (see FinishCollapse).
+        private static readonly int EnteringRealityTintArgb = ColorUtil.ToRgba(255, 190, 60, 230);
+
         private readonly ICoreServerAPI api;
         private readonly UnknowingConfig config;
         private readonly IServerNetworkChannel channel;
@@ -185,11 +194,14 @@ namespace TheUnknowing
             if (changed) Persist();
         }
 
-        // Widens every cloud entity this storm owns to the width of a chunk when EnteringReality
-        // begins - "the unknowing's strength in the realm" made visible, the same idea the
-        // since-removed particle-based beacon growth had in 0.3, just applied to the cloud entity
-        // itself instead. 12 -> 32 blocks wide (target/current = 2.6667, see the shape's "widen"
-        // animation) while height stays untouched.
+        // Escalates every cloud entity this storm owns when EnteringReality begins - "the
+        // unknowing's strength in the realm" made visible, the same idea the since-removed
+        // particle-based beacon growth had in 0.3, just applied to the cloud entity itself
+        // instead. Two effects, both one-time (never reverted - the cloud entity is despawned
+        // outright once the storm reaches Collapsing, see FinishCollapse):
+        //  - "widen": 12 -> 32 blocks wide (target/current = 2.6667, see the shape's "widen"
+        //    animation) while height stays untouched.
+        //  - EnteringRealityTintArgb - shifts the white starfield purple (see that field's comment).
         //
         // Stops "spawn" first rather than letting both animations run concurrently on the same
         // element - "widen"'s own frame 0 matches spawn's held final pose (1,1,1) exactly, so
@@ -198,7 +210,7 @@ namespace TheUnknowing
         // strong track record of "the obvious assumption is wrong" - see NOTES.local.md).
         // EaseInSpeed pinned high for the same reason as "spawn" - avoids the same
         // blend-in-from-the-bind-pose flash bug already fixed once on that animation.
-        private void TriggerCloudWidenAnimation(UnknowingStorm storm)
+        private void TriggerEnteringRealityCloudEffects(UnknowingStorm storm)
         {
             var widenAnim = new AnimationMetaData { Code = "widen", Animation = "widen", AnimationSpeed = 1f, EaseInSpeed = 1000f }.Init();
 
@@ -210,6 +222,7 @@ namespace TheUnknowing
 
                 cloudEntity.StopAnimation("spawn");
                 cloudEntity.AnimManager.StartAnimation(widenAnim);
+                cloudEntity.RenderColor = EnteringRealityTintArgb;
             }
         }
 
@@ -331,7 +344,7 @@ namespace TheUnknowing
                         string link = BuildLocationLink(storm.TargetPlayerName, x, groundY, z, "recently forgotten lands");
                         BroadcastMessage($"<strong>The Unknowing</strong> begins to devour {link} - the horrors within grow stronger.");
                     }
-                    TriggerCloudWidenAnimation(storm);
+                    TriggerEnteringRealityCloudEffects(storm);
                     changed = true;
                 }
                 else if (storm.Status == UnknowingStormStatus.EnteringReality &&
