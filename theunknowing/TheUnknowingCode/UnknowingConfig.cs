@@ -75,16 +75,6 @@ namespace TheUnknowing
         // storm cloud entity's void-black, meant to read as active danger rather than plain smoke.
         public float EmberParticlesPerColumn { get; set; } = 4f;
 
-        // Real-time seconds between ambient dread audio cues - own tick, same restart-to-retune
-        // caveat. Reuses the game's existing Rift sound (game:sounds/effect/rift.ogg - confirmed
-        // live under the "game" domain, same shared-domain quirk as entity codes) rather than
-        // needing new audio assets - it's the closest thematic match already in the game for
-        // "localized temporal wrongness."
-        public double AmbientAudioIntervalSeconds { get; set; } = 15.0;
-
-        // How far (blocks) the ambient audio cue carries from the storm's center.
-        public float AmbientAudioRange { get; set; } = 48f;
-
         // Real-time seconds for the in-storm fog AmbientModifier to fade fully in or out on
         // entering/leaving a storm's chunk bounds, rather than snapping on/off - see
         // TheUnknowingModSystem.OnFogFadeTick. Sent to the client per-transition via

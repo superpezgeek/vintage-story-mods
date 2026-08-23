@@ -678,27 +678,6 @@ namespace TheUnknowing
             api.World.SpawnParticles(emberParticles, dualCallByPlayer: null);
         }
 
-        // Registered on its own real-time tick by TheUnknowingModSystem, at
-        // config.AmbientAudioIntervalSeconds. Plays the game's existing Rift sound (the closest
-        // thematic match already in the game for "localized temporal wrongness") from roughly the
-        // center of each non-Done storm.
-        public void OnAmbientAudioTick()
-        {
-            if (storms.Count == 0) return;
-
-            var riftSound = new AssetLocation("game", "sounds/effect/rift.ogg");
-
-            foreach (UnknowingStorm storm in storms)
-            {
-                if (storm.Status == UnknowingStormStatus.Done) continue;
-                if (storm.ChunkColumns.Count == 0) continue;
-
-                var (x, groundY, z) = GetStormCenterPos(storm);
-
-                api.World.PlaySoundAt(riftSound, x, groundY, z, null, true, config.AmbientAudioRange);
-            }
-        }
-
         // Despawns any tracked entity that's wandered outside the storm's chunk columns (e.g.
         // fled a fight, wandered off) - the storm spawned it, it doesn't get to leave. Also prunes
         // already-dead/despawned entities from tracking, same as OnSpawnTick does - the two run on

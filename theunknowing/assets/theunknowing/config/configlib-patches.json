@@ -50,22 +50,6 @@
         "default": 4.0,
         "range": { "min": 0, "max": 30, "step": 1 }
       },
-      "AMBIENT_AUDIO_INTERVAL_SECONDS": {
-        "name": "ambient-audio-interval-seconds",
-        "ingui": "theunknowing:setting-ambient-audio-interval-seconds",
-        "weight": 2.3,
-        "comment": "Real-time seconds between ambient dread audio cues. Requires a server restart to take effect.",
-        "default": 15.0,
-        "range": { "min": 1, "max": 120, "step": 1 }
-      },
-      "AMBIENT_AUDIO_RANGE": {
-        "name": "ambient-audio-range",
-        "ingui": "theunknowing:setting-ambient-audio-range",
-        "weight": 2.4,
-        "comment": "Blocks the ambient audio cue carries from a storm's center.",
-        "default": 48.0,
-        "range": { "min": 8, "max": 256, "step": 8 }
-      },
       "FOG_FADE_SECONDS": {
         "name": "fog-fade-seconds",
         "ingui": "theunknowing:setting-fog-fade-seconds",

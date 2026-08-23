@@ -43,7 +43,7 @@ namespace TheUnknowing
         // Real seconds for the starfield to scroll through one full texture-height loop -
         // deliberately not exposed in UnknowingConfig yet (unlike every other tunable in this
         // mod) since it hasn't been seen live; revisit once it has.
-        private const float ScrollPeriodSeconds = 20f;
+        private const float ScrollPeriodSeconds = 5.0f;
 
         private static IShaderProgram? shaderProgram;
 
