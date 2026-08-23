@@ -41,7 +41,10 @@ namespace Caveshrooms
         public override FoodNutritionProperties GetNutritionProperties(IWorldAccessor world, ItemStack itemstack, Entity forEntity)
         {
             NutritionTuning n = CaveshroomsModSystem.Config.Nutrition;
-            CookStageMultiplier? mul = CookMultiplierFor(itemstack.Collectible.Variant["state"], n);
+            // Use this.Variant rather than itemstack.Collectible.Variant - ACulinaryArtillery's
+            // pie-filling cache (BlockPiePatches.OnLoadedPrefix) probes nutrition props during mod
+            // load with itemstacks whose Collectible isn't resolved, which NREs on that path.
+            CookStageMultiplier? mul = CookMultiplierFor(Variant["state"], n);
 
             return new FoodNutritionProperties
             {
