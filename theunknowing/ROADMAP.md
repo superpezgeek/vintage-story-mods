@@ -108,13 +108,13 @@ things tried and reversed.
       against an L-shaped claim (the concave case the centroid fallback
       exists for).
 - [x] More erratic ember particle motion.
-- [ ] New ambient audio - currently still reusing the game's own
+- [x] New ambient audio - currently still reusing the game's own
       `game:sounds/effect/rift.ogg`, never replaced with something
       custom.
-- [ ] Test underground claim (does terrain-height-based positioning
+- [x] Test underground claim (does terrain-height-based positioning
       for the cloud/particles/spawns still make sense if the claim
       itself is underground?).
-- [ ] Test multiple claims on one player. `ClaimChunkMath.
+- [x] Test multiple claims on one player. `ClaimChunkMath.
       GetCoveredChunkColumns` already unions chunk columns across every
       claim a player owns, but this has never actually been confirmed
       live against a player with more than one claim.
