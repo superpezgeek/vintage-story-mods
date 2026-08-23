@@ -10,8 +10,9 @@ reasoning — this file is just the "what's left."
 - [x] Regrowth cycle (`empty → flowering → ripe`) confirmed advancing
       over time, no replanting needed; natural worldgen spawns confirmed.
 - [x] Correct drops/tooling for all three states — shovel-fast breaking,
-      right-click harvest on ripe (2–3 quantity), breaking ripe drops
-      both the mushroom and the substrate block.
+      right-click harvest on ripe requires a knife (2–3 quantity), breaking
+      ripe drops both the mushroom and the substrate block regardless of
+      tool.
 - [x] Teal/cyan glow scaling with growth stage, color-matched to the
       vanilla Temporal Gear.
 - [x] Mushroom is edible: poisonous and mildly psychedelic.

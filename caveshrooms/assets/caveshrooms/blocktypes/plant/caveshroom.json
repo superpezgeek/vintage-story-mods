@@ -56,6 +56,7 @@
       {
         "name": "Harvestable",
         "properties": {
+          "tool": "Knife",
           "harvestTime": 1.5,
           "harvestedStack": {
             "type": "item",
