@@ -419,7 +419,7 @@ namespace TheUnknowing
         // waypoint's own label.
         private void BroadcastStormUnleashed(string playerName, double x, int groundY, double z)
         {
-            string link = BuildLocationLink(playerName, x, groundY, z, "recently forgotten lands");
+            string link = BuildLocationLink(playerName, x, groundY, z, "forgotten lands");
             BroadcastMessage($"<strong>The Unknowing</strong> gathers strength over {link}.");
         }
 
@@ -450,7 +450,7 @@ namespace TheUnknowing
                     api.World.Logger.Notification($"[TheUnknowing] Storm over '{storm.TargetPlayerName}' is entering reality.");
                     {
                         var (x, groundY, z) = GetStormCenterPos(storm);
-                        string link = BuildLocationLink(storm.TargetPlayerName, x, groundY, z, "recently forgotten lands");
+                        string link = BuildLocationLink(storm.TargetPlayerName, x, groundY, z, "forgotten lands");
                         BroadcastMessage($"<strong>The Unknowing</strong> begins to devour {link} - the horrors within grow stronger.");
                     }
                     TriggerEnteringRealityCloudEffects(storm);
@@ -463,7 +463,7 @@ namespace TheUnknowing
                     api.World.Logger.Notification($"[TheUnknowing] Storm over '{storm.TargetPlayerName}' is collapsing (duration elapsed).");
                     {
                         var (x, groundY, z) = GetStormCenterPos(storm);
-                        string link = BuildLocationLink(storm.TargetPlayerName, x, groundY, z, "recently forgotten lands");
+                        string link = BuildLocationLink(storm.TargetPlayerName, x, groundY, z, "forgotten lands");
                         BroadcastMessage($"Reality surrounding {link} begins to collapse.");
                     }
                     changed = true;
