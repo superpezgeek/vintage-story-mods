@@ -9,8 +9,6 @@
 	"setting-max-concurrent-enemies": "Max concurrent enemies per storm",
 	"setting-fog-particle-interval-seconds": "Ember particle interval (seconds, restart required)",
 	"setting-ember-particles-per-column": "Ember particles per column",
-	"setting-ambient-audio-interval-seconds": "Ambient audio interval (seconds, restart required)",
-	"setting-ambient-audio-range": "Ambient audio range (blocks)",
 	"setting-fog-fade-seconds": "Fog fade duration (seconds)",
 	"setting-storm-membership-interval-seconds": "Storm membership check interval (seconds, restart required)",
 	"setting-enemy-entity-codes": "Enemy entity codes (Gathering Strength)",

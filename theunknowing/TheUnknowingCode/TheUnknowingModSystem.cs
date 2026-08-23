@@ -17,11 +17,38 @@ namespace TheUnknowing
         private const string NetworkChannelName = "theunknowing";
         private const string FogAmbientModifierKey = "theunknowing:storm-fog";
 
+        // Single source of truth for every storm-music fade (see StartStormMusic/StopStormMusic/
+        // OnStormTrackLoaded) - there are 3 separate FadeIn/FadeOut call sites (fresh entry,
+        // cancel-a-fade-out-in-flight, and leaving), and having one of them hardcoded instead of
+        // reading this is exactly what made an earlier tuning pass look like it "did nothing":
+        // whichever code path actually got hit during a given test could easily be the one still
+        // holding a stale literal.
+        private const float StormMusicFadeSeconds = 3.0f;
+
         // Client-side fade state for the in-storm fog effect - see StartClientSide/OnFogFadeTick.
         private AmbientModifier? fogModifier;
         private float fogWeight;
         private bool inStorm;
         private float fogFadeSeconds = 2.5f;
+
+        // Client-side "you are in a storm" music - see StartClientSide/OnInStormPacket and the
+        // Start/StopStormMusic region below.
+        //
+        // Was originally 4 separate tracks shuffled at runtime (a new pick every time the
+        // current one finished, via a poll tick - ILoadedSound has no "finished" event) -
+        // confirmed live that read as a noticeable seam at every switch, even with a fade-in on
+        // each new pick. Replaced with one file: the same 4 source tracks pre-concatenated
+        // offline in a fixed order (1-4-2-3, per user request - they were authored to sound
+        // correct back-to-back in any order) into a single ~2:52 unknowing-storm.ogg, looped
+        // continuously with only one fade-in, on first entering the storm. Resolves to
+        // assets/theunknowing/music/unknowing-storm.ogg (MusicTrack.Initialize prefixes any
+        // non-"sounds"-rooted path with "music/" and appends ".ogg" automatically).
+        private static readonly AssetLocation StormMusicLocation = new AssetLocation("theunknowing", "unknowing-storm");
+        private ICoreClientAPI? capi;
+        private MusicTrack? stormTrack;
+        private bool stormTrackFadingOut;
+        private long stormTrackStartLoadingMs;
+        private long stormTrackStartHandlerId;
 
         // Runs on both sides before Entities/Blocks/Items are loaded from JSON - custom entity
         // behavior classes referenced by code (e.g. theunknowing.json's "theunknowing:infotext")
@@ -56,7 +83,6 @@ namespace TheUnknowing
             api.Event.RegisterGameTickListener(_ => stormManager.OnGameTick(), 10000);
             api.Event.RegisterGameTickListener(_ => stormManager.OnSpawnTick(), (int)(config.EnemySpawnIntervalSeconds * 1000));
             api.Event.RegisterGameTickListener(_ => stormManager.OnFogTick(), (int)(config.FogParticleIntervalSeconds * 1000));
-            api.Event.RegisterGameTickListener(_ => stormManager.OnAmbientAudioTick(), (int)(config.AmbientAudioIntervalSeconds * 1000));
             api.Event.RegisterGameTickListener(_ => stormManager.OnMembershipTick(), (int)(config.StormMembershipIntervalSeconds * 1000));
 
             api.ChatCommands.Create("unknowing-storm")
@@ -96,6 +122,7 @@ namespace TheUnknowing
         public override void StartClientSide(ICoreClientAPI api)
         {
             base.StartClientSide(api);
+            capi = api;
 
             // Registered here (not Start()) matching where the base game's own "Shape"/"Item"/
             // etc. renderer classes are registered (vsessentialsmod Core.StartClientSide) -
@@ -136,8 +163,93 @@ namespace TheUnknowing
 
         private void OnInStormPacket(InStormPacket packet)
         {
+            bool wasInStorm = inStorm;
             inStorm = packet.InStorm;
             if (packet.FogFadeSeconds > 0) fogFadeSeconds = packet.FogFadeSeconds;
+
+            // InStormPacket only arrives on an actual transition (see
+            // UnknowingStormManager.OnMembershipTick), so this edge check is mostly
+            // belt-and-suspenders rather than load-bearing deduplication.
+            if (inStorm && !wasInStorm) StartStormMusic();
+            else if (!inStorm && wasInStorm) StopStormMusic();
+        }
+
+        // Mirrors vssurvivalmod's own BlockEntityMusicTrigger (the game's existing "play a music
+        // track while inside an area" feature, used for its lore areas) rather than a raw looping
+        // PlaySound - StartTrack/ForceActive/Priority plug into the game's real music engine, so
+        // whatever ambient music was already playing properly fades out instead of layering under
+        // this, and the engine won't silently reclaim/dispose the track between its own director
+        // checks (see MusicTrack.ContinuePlay - ForceActive short-circuits that check to always
+        // true). Priority 99 matches the same games's own boss-fight/lore-area tracks, which is
+        // high enough to always win over incidental ambient music.
+        private void StartStormMusic()
+        {
+            if (capi == null) return;
+            if (stormTrackFadingOut && stormTrack?.Sound != null)
+            {
+                stormTrack.Sound.FadeIn(StormMusicFadeSeconds, null); // cancels the FadeOut already in flight
+                stormTrackFadingOut = false;
+                return;
+            }
+            if (stormTrack?.loading == true || stormTrack?.Sound?.IsPlaying == true) return;
+
+            stormTrackFadingOut = false;
+            stormTrackStartLoadingMs = capi.World.ElapsedMilliseconds;
+            stormTrack = capi.StartTrack(StormMusicLocation, 99f, EnumSoundType.Music, OnStormTrackLoaded);
+            stormTrack.ForceActive = true;
+        }
+
+        private void StopStormMusic()
+        {
+            if (capi == null) return;
+
+            if (stormTrackStartHandlerId != 0)
+            {
+                capi.Event.UnregisterCallback(stormTrackStartHandlerId);
+                return;
+            }
+
+            if (stormTrack?.Sound != null) stormTrackFadingOut = true;
+            stormTrack?.FadeOut(StormMusicFadeSeconds, () =>
+            {
+                stormTrackFadingOut = false;
+                MusicTrack? trackTmp = stormTrack; // guards against a race the same way BlockEntityMusicTrigger's own comment describes - this callback lands on a later main-thread tick, by which time stormTrack could already be null
+                if (trackTmp != null) trackTmp.ForceActive = false;
+                stormTrack = null;
+            });
+        }
+
+        private void OnStormTrackLoaded(ILoadedSound sound)
+        {
+            if (stormTrack == null)
+            {
+                sound?.Dispose();
+                return;
+            }
+            if (sound == null) return;
+
+            stormTrack.Sound = sound;
+            stormTrack.Sound.SetLooping(true);
+
+            // Needed so the music engine doesn't dispose the sound out from under ForceActive.
+            stormTrack.ManualDispose = true;
+
+            long msPassed = capi!.World.ElapsedMilliseconds - stormTrackStartLoadingMs;
+            stormTrackStartHandlerId = capi.Event.RegisterCallback((dt) =>
+            {
+                if (sound.IsDisposed) return;
+                // Confirmed live: Start() begins playback at full volume immediately - FadeIn
+                // only produces an audible ramp when called on a sound that's already mid-
+                // animation (e.g. the cancel-a-fade-out branch above, reversing an in-flight
+                // fade). On a genuinely fresh Start(), FadeIn was animating from "already full"
+                // to "full" - a no-op regardless of duration. Explicitly zeroing the volume first
+                // gives it something to actually ramp from.
+                sound.SetVolume(0f);
+                sound.Start();
+                sound.FadeIn(StormMusicFadeSeconds, null);
+                stormTrack!.loading = false;
+                stormTrackStartHandlerId = 0;
+            }, (int)Math.Max(0, 500 - msPassed), true);
         }
 
         // Ticks fogModifier's Weight fields toward 1 (in storm) or 0 (out of storm) over
@@ -232,8 +344,6 @@ namespace TheUnknowing
             SetIfPresent(libConfig, "MAX_CONCURRENT_ENEMIES", config.MaxConcurrentEnemies);
             SetIfPresent(libConfig, "FOG_PARTICLE_INTERVAL_SECONDS", config.FogParticleIntervalSeconds);
             SetIfPresent(libConfig, "EMBER_PARTICLES_PER_COLUMN", config.EmberParticlesPerColumn);
-            SetIfPresent(libConfig, "AMBIENT_AUDIO_INTERVAL_SECONDS", config.AmbientAudioIntervalSeconds);
-            SetIfPresent(libConfig, "AMBIENT_AUDIO_RANGE", config.AmbientAudioRange);
             SetIfPresent(libConfig, "FOG_FADE_SECONDS", config.FogFadeSeconds);
             SetIfPresent(libConfig, "STORM_MEMBERSHIP_INTERVAL_SECONDS", config.StormMembershipIntervalSeconds);
             SetIfPresent(libConfig, "ENEMY_ENTITY_CODES", string.Join(", ", config.EnemyEntityCodes));
@@ -265,8 +375,6 @@ namespace TheUnknowing
             config.MaxConcurrentEnemies = libConfig.GetSetting("MAX_CONCURRENT_ENEMIES")?.Value.AsInt(config.MaxConcurrentEnemies) ?? config.MaxConcurrentEnemies;
             config.FogParticleIntervalSeconds = libConfig.GetSetting("FOG_PARTICLE_INTERVAL_SECONDS")?.Value.AsDouble(config.FogParticleIntervalSeconds) ?? config.FogParticleIntervalSeconds;
             config.EmberParticlesPerColumn = (float)(libConfig.GetSetting("EMBER_PARTICLES_PER_COLUMN")?.Value.AsDouble(config.EmberParticlesPerColumn) ?? config.EmberParticlesPerColumn);
-            config.AmbientAudioIntervalSeconds = libConfig.GetSetting("AMBIENT_AUDIO_INTERVAL_SECONDS")?.Value.AsDouble(config.AmbientAudioIntervalSeconds) ?? config.AmbientAudioIntervalSeconds;
-            config.AmbientAudioRange = (float)(libConfig.GetSetting("AMBIENT_AUDIO_RANGE")?.Value.AsDouble(config.AmbientAudioRange) ?? config.AmbientAudioRange);
             config.FogFadeSeconds = (float)(libConfig.GetSetting("FOG_FADE_SECONDS")?.Value.AsDouble(config.FogFadeSeconds) ?? config.FogFadeSeconds);
             config.StormMembershipIntervalSeconds = libConfig.GetSetting("STORM_MEMBERSHIP_INTERVAL_SECONDS")?.Value.AsDouble(config.StormMembershipIntervalSeconds) ?? config.StormMembershipIntervalSeconds;
             config.EnemyEntityCodes = SplitEntityCodes(libConfig.GetSetting("ENEMY_ENTITY_CODES")?.Value.AsString(), config.EnemyEntityCodes);
