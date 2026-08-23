@@ -515,12 +515,25 @@ namespace TheUnknowing
         // mechanism.
         private void FinishCollapse(UnknowingStorm storm)
         {
+            int toDespawn = storm.SpawnedEntityIds.Count;
+            int despawned = 0;
+            int unresolved = 0;
+
             foreach (long entityId in storm.SpawnedEntityIds)
             {
                 Entity? entity = api.World.GetEntityById(entityId);
-                if (entity == null) continue;
+                if (entity == null)
+                {
+                    unresolved++;
+                    continue;
+                }
                 api.World.DespawnEntity(entity, new EntityDespawnData { Reason = EnumDespawnReason.Removed });
+                despawned++;
             }
+
+            api.World.Logger.Notification(
+                $"[TheUnknowing] [MobDespawn] reason=StormCollapse storm='{storm.TargetPlayerName}' tracked={toDespawn} " +
+                $"despawned={despawned} unresolved={unresolved} totalTracked={TotalTrackedEntities() - toDespawn}");
 
             foreach (ChunkColumn column in storm.ChunkColumns)
             {
@@ -694,6 +707,9 @@ namespace TheUnknowing
                 {
                     storm.SpawnedEntityIds.RemoveAt(i);
                     changed = true;
+                    api.World.Logger.Notification(
+                        $"[TheUnknowing] [MobPrune] storm='{storm.TargetPlayerName}' id={entityId} " +
+                        $"(dead/unloaded, untracked without an explicit despawn call) stormCount={storm.SpawnedEntityIds.Count} totalTracked={TotalTrackedEntities()}");
                     continue;
                 }
 
@@ -704,6 +720,9 @@ namespace TheUnknowing
                     api.World.DespawnEntity(entity, new EntityDespawnData { Reason = EnumDespawnReason.Removed });
                     storm.SpawnedEntityIds.RemoveAt(i);
                     changed = true;
+                    api.World.Logger.Notification(
+                        $"[TheUnknowing] [MobDespawn] reason=OutOfBounds entity='{entity.Code}' id={entityId} storm='{storm.TargetPlayerName}' " +
+                        $"chunk=({chunkX},{chunkZ}) stormCount={storm.SpawnedEntityIds.Count} totalTracked={TotalTrackedEntities()}");
                 }
             }
 
@@ -726,7 +745,14 @@ namespace TheUnknowing
                 // not a lifetime spawn count.
                 int before = storm.SpawnedEntityIds.Count;
                 storm.SpawnedEntityIds.RemoveAll(id => api.World.GetEntityById(id) == null);
-                if (storm.SpawnedEntityIds.Count != before) changed = true;
+                int prunedCount = before - storm.SpawnedEntityIds.Count;
+                if (prunedCount > 0)
+                {
+                    changed = true;
+                    api.World.Logger.Notification(
+                        $"[TheUnknowing] [MobPrune] storm='{storm.TargetPlayerName}' pruned={prunedCount} " +
+                        $"(dead/unloaded, untracked without an explicit despawn call) stormCount={storm.SpawnedEntityIds.Count} totalTracked={TotalTrackedEntities()}");
+                }
 
                 bool entering = storm.Status == UnknowingStormStatus.EnteringReality;
                 int cap = entering ? (int)(config.MaxConcurrentEnemies * config.EnteringIntensityMultiplier) : config.MaxConcurrentEnemies;
@@ -735,7 +761,7 @@ namespace TheUnknowing
                 if (storm.SpawnedEntityIds.Count >= cap) continue;
                 if (storm.ChunkColumns.Count == 0 || pool.Count == 0) continue;
 
-                if (TrySpawnOne(storm, pool))
+                if (TrySpawnOne(storm, pool, cap))
                 {
                     changed = true;
                 }
@@ -744,11 +770,21 @@ namespace TheUnknowing
             if (changed) Persist();
         }
 
-        private bool TrySpawnOne(UnknowingStorm storm, List<string> pool)
+        // Kept clear of a chosen column's own outer blocks - picking uniformly across the full
+        // 32-block column (the old behavior) could land a mob one step from a column it doesn't
+        // own, and EnforceContainment despawns on that single step regardless of how it happened
+        // to get there. Confirmed live: this was producing near-immediate OutOfBounds despawns
+        // unrelated to actually fleeing or being chased off - see UnknowingStormManager audit,
+        // 2026-08-23. Margin is in blocks, not a fraction of ChunkSize, so it stays meaningful if
+        // ChunkSize ever changed.
+        private const int SpawnEdgeMarginBlocks = 6;
+
+        private bool TrySpawnOne(UnknowingStorm storm, List<string> pool, int cap)
         {
             ChunkColumn column = storm.ChunkColumns[api.World.Rand.Next(storm.ChunkColumns.Count)];
-            int blockX = column.ChunkX * ClaimChunkMath.ChunkSize + api.World.Rand.Next(ClaimChunkMath.ChunkSize);
-            int blockZ = column.ChunkZ * ClaimChunkMath.ChunkSize + api.World.Rand.Next(ClaimChunkMath.ChunkSize);
+            int interiorSpan = ClaimChunkMath.ChunkSize - 2 * SpawnEdgeMarginBlocks;
+            int blockX = column.ChunkX * ClaimChunkMath.ChunkSize + SpawnEdgeMarginBlocks + api.World.Rand.Next(interiorSpan);
+            int blockZ = column.ChunkZ * ClaimChunkMath.ChunkSize + SpawnEdgeMarginBlocks + api.World.Rand.Next(interiorSpan);
             int groundY = api.World.BlockAccessor.GetTerrainMapheightAt(new BlockPos(blockX, 0, blockZ));
 
             string entityCode = pool[api.World.Rand.Next(pool.Count)];
@@ -764,6 +800,11 @@ namespace TheUnknowing
             api.World.SpawnEntity(entity);
 
             storm.SpawnedEntityIds.Add(entity.EntityId);
+
+            api.World.Logger.Notification(
+                $"[TheUnknowing] [MobSpawn] entity='{entityCode}' id={entity.EntityId} storm='{storm.TargetPlayerName}' " +
+                $"phase={storm.Status} pos=({blockX},{groundY + 1},{blockZ}) stormCount={storm.SpawnedEntityIds.Count}/{cap} totalTracked={TotalTrackedEntities()}");
+
             return true;
         }
 
@@ -786,10 +827,14 @@ namespace TheUnknowing
         {
             int entityCount = 0;
             int unresolvedCount = 0;
+            int mobsBefore = TotalTrackedEntities();
 
             foreach (UnknowingStorm storm in storms)
             {
                 storm.Status = UnknowingStormStatus.Done;
+
+                int stormMobCount = storm.SpawnedEntityIds.Count;
+                int stormDespawned = 0;
 
                 for (int i = storm.SpawnedEntityIds.Count - 1; i >= 0; i--)
                 {
@@ -803,6 +848,14 @@ namespace TheUnknowing
                     api.World.DespawnEntity(entity, new EntityDespawnData { Reason = EnumDespawnReason.Removed });
                     storm.SpawnedEntityIds.RemoveAt(i);
                     entityCount++;
+                    stormDespawned++;
+                }
+
+                if (stormMobCount > 0)
+                {
+                    api.World.Logger.Notification(
+                        $"[TheUnknowing] [MobDespawn] reason=ClearAllStorms storm='{storm.TargetPlayerName}' tracked={stormMobCount} " +
+                        $"despawned={stormDespawned} unresolved={stormMobCount - stormDespawned}");
                 }
 
                 foreach (ChunkColumn column in storm.ChunkColumns)
@@ -826,6 +879,9 @@ namespace TheUnknowing
             {
                 api.World.Logger.Notification($"[TheUnknowing] ClearAllStorms: {unresolvedCount} entity/entities not found (likely unloaded chunks), left tracked for a rerun.");
             }
+
+            api.World.Logger.Notification(
+                $"[TheUnknowing] [MobDespawn] reason=ClearAllStorms totalMobsTrackedBefore={mobsBefore} totalMobsTrackedAfter={TotalTrackedEntities()}");
 
             int before = storms.Count;
             storms.RemoveAll(storm => storm.SpawnedEntityIds.Count == 0 && storm.ChunkColumns.All(c => c.CloudEntityId == 0));
@@ -934,12 +990,20 @@ namespace TheUnknowing
                 $"startUnixMillis={storm.StartUnixMillis} gatheringMinutes={storm.GatheringStrengthDurationMinutes:0.0} " +
                 $"enteringMinutes={storm.EnteringRealityDurationMinutes:0.0}");
 
-            return TextCommandResult.Success($"{storms.Count} tracked storm(s):\n" + string.Join("\n", lines));
+            return TextCommandResult.Success(
+                $"{storms.Count} tracked storm(s), {TotalTrackedEntities()} mob(s) tracked total:\n" + string.Join("\n", lines));
         }
 
         private void Persist()
         {
             api.WorldManager.SaveGame.StoreData(SaveDataKey, storms);
         }
+
+        // Sum of SpawnedEntityIds across every tracked storm - the mod-wide "how many mobs does
+        // TheUnknowing currently believe are alive" figure, logged alongside every individual
+        // spawn/despawn/prune event below so a per-storm count can be cross-checked against the
+        // total (e.g. spotting whether one storm's cap is being bypassed by entities actually
+        // tracked under another).
+        private int TotalTrackedEntities() => storms.Sum(s => s.SpawnedEntityIds.Count);
     }
 }
