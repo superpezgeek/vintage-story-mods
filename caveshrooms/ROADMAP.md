@@ -26,6 +26,20 @@ reasoning — this file is just the "what's left."
       fully optional, no hard dependency.
 - [x] Full handbook entries, including a dedicated "Game Mechanic:
       Caveshrooms" guide page.
+- [x] ConfigLib support (mods.vintagestory.at/show/mod/9551) - every
+      `CaveshroomsConfig` field (38 total) is editable live via
+      ConfigLib's in-game GUI (`assets/caveshrooms/config/
+      configlib-patches.json`), reusing the same seed/pull recipe
+      TheUnknowing's own integration established. `Caveshrooms.json`
+      stays the one file on disk; most fields still need a server
+      restart to actually apply either way (baked into shipped JSON at
+      `AssetsLoaded`/`OnLoaded`, not read live) - only the top-level
+      stability/glow-per-eat and direct `Nutrition` fields are truly
+      live. See README's "ConfigLib (optional)" section for the
+      restart/live breakdown and `NOTES.local.md` for the full writeup.
+      Confirmed live against a real ConfigLib-installed server - edited
+      settings via its GUI, saved, and confirmed `Caveshrooms.json`
+      updated to match.
 
 Per-feature implementation detail, dead ends, and verification steps for
 all of the above are in `NOTES.local.md`.

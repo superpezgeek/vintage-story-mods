@@ -38,8 +38,9 @@ Caveshrooms/
 │   └── gen_cooked_textures.py       # regenerate cooked-state + pie textures
 ├── CaveshroomsCode/                 # C# source (config, stability drain, player glow, nutrition)
 │   ├── CaveshroomsCode.csproj
+│   ├── lib/configlib.dll            # vendored, compile-time only (see ConfigLib section below)
 │   ├── CaveshroomsConfig.cs         # ModConfig/Caveshrooms.json shape + defaults
-│   ├── CaveshroomsModSystem.cs      # registers everything, loads config, glow decay tick, .temporalstatus/.temporalstatusadmin
+│   ├── CaveshroomsModSystem.cs      # registers everything, loads config, ConfigLib hook, glow decay tick, .temporalstatus/.temporalstatusadmin
 │   ├── CaveshroomsAssetTuning.cs    # rewrites harvest/glow/worldgen JSON from config at AssetsLoaded
 │   ├── CollectibleBehaviorTemporalEffect.cs  # applies the stability/glow effect when eaten
 │   ├── ItemTemporalMushroom.cs      # config-driven nutrition + perishability
@@ -54,6 +55,7 @@ Caveshrooms/
     ├── worldgen/blockpatches/caveshrooms.json                # underground spawn rules
     ├── lang/en.json                                          # display names + handbook text
     ├── config/handbook/gamemechanicinfo-caveshrooms.json     # "Game Mechanic" guide page
+    ├── config/configlib-patches.json                         # ConfigLib GUI schema (optional mod)
     ├── recipes/grid/potionbase-basic-caveshroom.json         # Alchemy recipe
     ├── recipes/grid/choppedtemporalmushroom.json             # knife/cleaver chopping
     ├── recipes/grid/cookedchoppedtemporalmushroom.json       # chop a cooked mushroom
@@ -223,6 +225,37 @@ Worldgen/Harvest/GrowthGlow are applied by rewriting the shipped asset
 JSON in memory at startup (see Mechanics below) — if that ever fails for
 any reason, the shipped JSON values are the fallback, and a warning is
 logged.
+
+### ConfigLib (optional)
+
+If [ConfigLib](https://mods.vintagestory.at/configlib) is installed
+(optional, not a hard dependency — see `modinfo.json`), every field above
+also shows up in its in-game GUI, defined in
+`assets/caveshrooms/config/configlib-patches.json`. `Caveshrooms.json`
+stays the one file actually on disk — ConfigLib is a live editing surface
+for it, not a second independent store: at startup the file's values are
+pushed into ConfigLib (so the GUI reflects reality immediately rather
+than the JSON's own hardcoded defaults), and any edit made through the
+GUI is written straight back to `Caveshrooms.json`.
+
+**Most settings still need a server restart, ConfigLib or not** — the
+same restart requirement the config file already has above. Only the
+top-level stability/glow-per-eat fields and the direct (non-pie)
+`Nutrition` fields are read fresh on every use and apply live through
+ConfigLib without a restart. Everything under `Harvest`, `GrowthGlow`,
+and `Worldgen` is baked straight into the shipped block/worldgen JSON
+once at startup (see "Config-driven worldgen & block tuning" below);
+`Perish` and `Nutrition.PieFillingSatiety` are cached once per item at
+load time; and `GlowHue` is split — it applies live to player glow but
+needs a restart for the baked block growth-stage glow. Each setting's
+`comment` in `configlib-patches.json` (shown as a GUI tooltip) says which
+applies to it.
+
+**Don't hand-edit `Caveshrooms.json` while the server is running.** Same
+caveat as any config file here: it's only read once, at startup. If
+ConfigLib is installed and someone saves a change through its GUI
+afterward, that overwrites the whole file with ConfigLib's in-memory
+values, discarding any hand-edit made in the meantime.
 
 ### Growth & spawning (structural JSON)
 

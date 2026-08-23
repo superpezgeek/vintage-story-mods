@@ -1,0 +1,313 @@
+{
+  "version": 2,
+  "settings": {
+    "float": {
+      "STABILITY_LOSS_PER_PSYCHEDELIC": {
+        "name": "stability-loss-per-psychedelic",
+        "ingui": "caveshrooms:setting-stability-loss-per-psychedelic",
+        "weight": 1.0,
+        "comment": "Temporal stability lost per point of the eaten form's Psychedelic nutrition. Applies live - read fresh on every eat.",
+        "default": 0.05,
+        "range": { "min": 0, "max": 1, "step": 0.01 }
+      },
+      "GLOW_GAIN_PER_PSYCHEDELIC": {
+        "name": "glow-gain-per-psychedelic",
+        "ingui": "caveshrooms:setting-glow-gain-per-psychedelic",
+        "weight": 1.01,
+        "comment": "Player glow gained per point of the eaten form's Psychedelic nutrition. Applies live - read fresh on every eat.",
+        "default": 2.5,
+        "range": { "min": 0, "max": 20, "step": 0.1 }
+      },
+      "MAX_GLOW": {
+        "name": "max-glow",
+        "ingui": "caveshrooms:setting-max-glow",
+        "weight": 1.02,
+        "comment": "Cap on accumulated player glow. Applies live. The glow value's on-screen brightness is separately clamped to 22 by the light patch regardless of this cap.",
+        "default": 20,
+        "range": { "min": 0, "max": 22, "step": 1 }
+      },
+      "GLOW_DECAY_PER_HOUR": {
+        "name": "glow-decay-per-hour",
+        "ingui": "caveshrooms:setting-glow-decay-per-hour",
+        "weight": 1.03,
+        "comment": "Player glow lost per in-game hour when not eating. Applies live - read every tick.",
+        "default": 2.5,
+        "range": { "min": 0, "max": 20, "step": 0.1 }
+      },
+      "RAW_SATIETY": {
+        "name": "raw-satiety",
+        "ingui": "caveshrooms:setting-raw-satiety",
+        "weight": 2.0,
+        "comment": "Base satiety for raw/chopped Temporal Mushroom (cook-stage multipliers apply on top). Applies live - read fresh on every nutrition query.",
+        "default": 80,
+        "range": { "min": 0, "max": 300, "step": 1 }
+      },
+      "RAW_HEALTH": {
+        "name": "raw-health",
+        "ingui": "caveshrooms:setting-raw-health",
+        "weight": 2.01,
+        "comment": "Base health (negative = poison) for raw/chopped Temporal Mushroom. Applies live when eaten directly. The Temporal Pie's own filling nutrition is baked from this value once at mod load - needs a restart to pick up a change there.",
+        "default": -1,
+        "range": { "min": -20, "max": 0, "step": 0.5 }
+      },
+      "RAW_PSYCHEDELIC": {
+        "name": "raw-psychedelic",
+        "ingui": "caveshrooms:setting-raw-psychedelic",
+        "weight": 2.02,
+        "comment": "Base psychedelic value for raw/chopped Temporal Mushroom - also drives stability loss and glow gain via the multipliers above. Applies live when eaten directly. The Temporal Pie's own filling nutrition is baked from this value once at mod load - needs a restart to pick up a change there.",
+        "default": 0.8,
+        "range": { "min": 0, "max": 1, "step": 0.05 }
+      },
+      "PARTBAKED_SATIETY_MULT": {
+        "name": "partbaked-satiety-multiplier",
+        "ingui": "caveshrooms:setting-partbaked-satiety-multiplier",
+        "weight": 2.03,
+        "comment": "Multiplies raw-satiety for the part-baked cook stage. Applies live.",
+        "default": 1.125,
+        "range": { "min": 0, "max": 3, "step": 0.025 }
+      },
+      "PARTBAKED_HEALTH_MULT": {
+        "name": "partbaked-health-multiplier",
+        "ingui": "caveshrooms:setting-partbaked-health-multiplier",
+        "weight": 2.04,
+        "comment": "Multiplies raw-health for the part-baked cook stage. Applies live.",
+        "default": 0.75,
+        "range": { "min": 0, "max": 2, "step": 0.05 }
+      },
+      "PARTBAKED_PSYCHEDELIC_MULT": {
+        "name": "partbaked-psychedelic-multiplier",
+        "ingui": "caveshrooms:setting-partbaked-psychedelic-multiplier",
+        "weight": 2.05,
+        "comment": "Multiplies raw-psychedelic for the part-baked cook stage. Applies live.",
+        "default": 0.75,
+        "range": { "min": 0, "max": 2, "step": 0.05 }
+      },
+      "PERFECT_SATIETY_MULT": {
+        "name": "perfect-satiety-multiplier",
+        "ingui": "caveshrooms:setting-perfect-satiety-multiplier",
+        "weight": 2.06,
+        "comment": "Multiplies raw-satiety for the perfectly-cooked stage. Applies live.",
+        "default": 1.375,
+        "range": { "min": 0, "max": 3, "step": 0.025 }
+      },
+      "PERFECT_HEALTH_MULT": {
+        "name": "perfect-health-multiplier",
+        "ingui": "caveshrooms:setting-perfect-health-multiplier",
+        "weight": 2.07,
+        "comment": "Multiplies raw-health for the perfectly-cooked stage. Applies live.",
+        "default": 0.5,
+        "range": { "min": 0, "max": 2, "step": 0.05 }
+      },
+      "PERFECT_PSYCHEDELIC_MULT": {
+        "name": "perfect-psychedelic-multiplier",
+        "ingui": "caveshrooms:setting-perfect-psychedelic-multiplier",
+        "weight": 2.08,
+        "comment": "Multiplies raw-psychedelic for the perfectly-cooked stage. Applies live.",
+        "default": 0.5,
+        "range": { "min": 0, "max": 2, "step": 0.05 }
+      },
+      "CHARRED_SATIETY_MULT": {
+        "name": "charred-satiety-multiplier",
+        "ingui": "caveshrooms:setting-charred-satiety-multiplier",
+        "weight": 2.09,
+        "comment": "Multiplies raw-satiety for the charred cook stage. Applies live.",
+        "default": 1.25,
+        "range": { "min": 0, "max": 3, "step": 0.025 }
+      },
+      "CHARRED_HEALTH_MULT": {
+        "name": "charred-health-multiplier",
+        "ingui": "caveshrooms:setting-charred-health-multiplier",
+        "weight": 2.1,
+        "comment": "Multiplies raw-health for the charred cook stage. Applies live.",
+        "default": 0.25,
+        "range": { "min": 0, "max": 2, "step": 0.05 }
+      },
+      "CHARRED_PSYCHEDELIC_MULT": {
+        "name": "charred-psychedelic-multiplier",
+        "ingui": "caveshrooms:setting-charred-psychedelic-multiplier",
+        "weight": 2.11,
+        "comment": "Multiplies raw-psychedelic for the charred cook stage. Applies live.",
+        "default": 0.25,
+        "range": { "min": 0, "max": 2, "step": 0.05 }
+      },
+      "PIE_FILLING_SATIETY": {
+        "name": "pie-filling-satiety",
+        "ingui": "caveshrooms:setting-pie-filling-satiety",
+        "weight": 2.12,
+        "comment": "Satiety for the raw chopped mushroom used as Temporal Pie filling (independent of raw-satiety - health/psychedelic in the pie reuse raw-health/raw-psychedelic unmultiplied). Requires a server restart - baked into the item's attributes once at mod load.",
+        "default": 150,
+        "range": { "min": 0, "max": 400, "step": 5 }
+      },
+      "RAW_FRESH_HOURS": {
+        "name": "raw-fresh-hours",
+        "ingui": "caveshrooms:setting-raw-fresh-hours",
+        "weight": 3.0,
+        "comment": "In-game hours raw/chopped mushroom stays fresh before perishing starts. Requires a server restart - baked into the item's cached perish properties once at mod load.",
+        "default": 96,
+        "range": { "min": 0, "max": 500, "step": 1 }
+      },
+      "RAW_TRANSITION_HOURS": {
+        "name": "raw-transition-hours",
+        "ingui": "caveshrooms:setting-raw-transition-hours",
+        "weight": 3.01,
+        "comment": "In-game hours raw/chopped mushroom takes to fully rot once perishing starts. Requires a server restart - baked into the item's cached perish properties once at mod load.",
+        "default": 24,
+        "range": { "min": 0, "max": 200, "step": 1 }
+      },
+      "COOKED_FRESH_HOURS": {
+        "name": "cooked-fresh-hours",
+        "ingui": "caveshrooms:setting-cooked-fresh-hours",
+        "weight": 3.02,
+        "comment": "In-game hours part-baked/perfect cooked mushroom stays fresh before perishing starts. Requires a server restart - baked into the item's cached perish properties once at mod load.",
+        "default": 432,
+        "range": { "min": 0, "max": 1000, "step": 1 }
+      },
+      "COOKED_TRANSITION_HOURS": {
+        "name": "cooked-transition-hours",
+        "ingui": "caveshrooms:setting-cooked-transition-hours",
+        "weight": 3.03,
+        "comment": "In-game hours part-baked/perfect cooked mushroom takes to fully rot once perishing starts. Requires a server restart - baked into the item's cached perish properties once at mod load.",
+        "default": 72,
+        "range": { "min": 0, "max": 300, "step": 1 }
+      },
+      "CHARRED_FRESH_HOURS": {
+        "name": "charred-fresh-hours",
+        "ingui": "caveshrooms:setting-charred-fresh-hours",
+        "weight": 3.04,
+        "comment": "In-game hours charred mushroom stays fresh before perishing starts. Requires a server restart - baked into the item's cached perish properties once at mod load.",
+        "default": 1512,
+        "range": { "min": 0, "max": 3000, "step": 1 }
+      },
+      "CHARRED_TRANSITION_HOURS": {
+        "name": "charred-transition-hours",
+        "ingui": "caveshrooms:setting-charred-transition-hours",
+        "weight": 3.05,
+        "comment": "In-game hours charred mushroom takes to fully rot once perishing starts. Requires a server restart - baked into the item's cached perish properties once at mod load.",
+        "default": 120,
+        "range": { "min": 0, "max": 500, "step": 1 }
+      },
+      "HARVEST_QUANTITY_AVG": {
+        "name": "harvest-quantity-avg",
+        "ingui": "caveshrooms:setting-harvest-quantity-avg",
+        "weight": 4.0,
+        "comment": "Average mushroom yield, both right-click harvesting a ripe caveshroom and breaking it. Requires a server restart - baked into the shipped blocktype JSON once at mod load.",
+        "default": 2.5,
+        "range": { "min": 0, "max": 10, "step": 0.1 }
+      },
+      "HARVEST_QUANTITY_VAR": {
+        "name": "harvest-quantity-var",
+        "ingui": "caveshrooms:setting-harvest-quantity-var",
+        "weight": 4.01,
+        "comment": "Yield variance around harvest-quantity-avg. Requires a server restart - baked into the shipped blocktype JSON once at mod load.",
+        "default": 0.5,
+        "range": { "min": 0, "max": 5, "step": 0.1 }
+      },
+      "SUBSTRATE_DROP_CHANCE": {
+        "name": "substrate-drop-chance",
+        "ingui": "caveshrooms:setting-substrate-drop-chance",
+        "weight": 4.02,
+        "comment": "Chance (0-1) that breaking the block (any growth stage) also drops a relocatable Unstable Substrate item, on top of any mushroom yield. Only applies to breaking, not right-click harvesting. Requires a server restart - baked into the shipped blocktype JSON once at mod load.",
+        "default": 0.5,
+        "range": { "min": 0, "max": 1, "step": 0.05 }
+      },
+      "WORLDGEN_CHANCE": {
+        "name": "worldgen-chance",
+        "ingui": "caveshrooms:setting-worldgen-chance",
+        "weight": 6.0,
+        "comment": "Worldgen block-patch spawn chance for new patches of Unstable Substrate. Requires a server restart, and only affects newly generated chunks either way - baked into the shipped worldgen JSON once at mod load.",
+        "default": 12,
+        "range": { "min": 0, "max": 100, "step": 0.5 }
+      },
+      "WORLDGEN_QUANTITY_AVG": {
+        "name": "worldgen-quantity-avg",
+        "ingui": "caveshrooms:setting-worldgen-quantity-avg",
+        "weight": 6.01,
+        "comment": "Average patch size per worldgen spawn. Requires a server restart, and only affects newly generated chunks either way - baked into the shipped worldgen JSON once at mod load.",
+        "default": 2,
+        "range": { "min": 0, "max": 20, "step": 0.5 }
+      },
+      "WORLDGEN_QUANTITY_VAR": {
+        "name": "worldgen-quantity-var",
+        "ingui": "caveshrooms:setting-worldgen-quantity-var",
+        "weight": 6.02,
+        "comment": "Patch size variance around worldgen-quantity-avg. Requires a server restart, and only affects newly generated chunks either way - baked into the shipped worldgen JSON once at mod load.",
+        "default": 1,
+        "range": { "min": 0, "max": 10, "step": 0.5 }
+      },
+      "WORLDGEN_MAX_Y": {
+        "name": "worldgen-max-y",
+        "ingui": "caveshrooms:setting-worldgen-max-y",
+        "weight": 6.03,
+        "comment": "Highest normalized world height (0-1) worldgen will place a patch at - keeps patches from spawning right at surface cave entrances. Requires a server restart, and only affects newly generated chunks either way - baked into the shipped worldgen JSON once at mod load.",
+        "default": 0.35,
+        "range": { "min": 0, "max": 1, "step": 0.01 }
+      }
+    },
+    "integer": {
+      "GLOW_HUE": {
+        "name": "glow-hue",
+        "ingui": "caveshrooms:setting-glow-hue",
+        "weight": 1.04,
+        "comment": "Shared hue (0-63) for both player glow and block growth-stage glow - defaults to the vanilla Temporal Gear's own hue. Player glow applies live. The block growth-stage glow color is baked into the shipped blocktype JSON once at mod load - needs a restart to pick up a change there.",
+        "default": 32,
+        "range": { "min": 0, "max": 63, "step": 1 }
+      },
+      "GLOW_SATURATION": {
+        "name": "glow-saturation",
+        "ingui": "caveshrooms:setting-glow-saturation",
+        "weight": 1.05,
+        "comment": "Player glow saturation only (block growth-stage glow has its own saturation per stage below). Real usable range is 0-7. Applies live.",
+        "default": 6,
+        "range": { "min": 0, "max": 7, "step": 1 }
+      },
+      "GLOW_EMPTY_SATURATION": {
+        "name": "glow-empty-saturation",
+        "ingui": "caveshrooms:setting-glow-empty-saturation",
+        "weight": 5.0,
+        "comment": "Block glow saturation for the empty (Unstable Substrate) growth stage. Real usable range is 0-7. Requires a server restart - baked into the shipped blocktype JSON once at mod load.",
+        "default": 3,
+        "range": { "min": 0, "max": 7, "step": 1 }
+      },
+      "GLOW_EMPTY_VALUE": {
+        "name": "glow-empty-value",
+        "ingui": "caveshrooms:setting-glow-empty-value",
+        "weight": 5.01,
+        "comment": "Block glow brightness for the empty (Unstable Substrate) growth stage (vanilla torch is 14). Requires a server restart - baked into the shipped blocktype JSON once at mod load.",
+        "default": 3,
+        "range": { "min": 0, "max": 22, "step": 1 }
+      },
+      "GLOW_FLOWERING_SATURATION": {
+        "name": "glow-flowering-saturation",
+        "ingui": "caveshrooms:setting-glow-flowering-saturation",
+        "weight": 5.02,
+        "comment": "Block glow saturation for the flowering (Caveshroom Saddle) growth stage. Real usable range is 0-7. Requires a server restart - baked into the shipped blocktype JSON once at mod load.",
+        "default": 5,
+        "range": { "min": 0, "max": 7, "step": 1 }
+      },
+      "GLOW_FLOWERING_VALUE": {
+        "name": "glow-flowering-value",
+        "ingui": "caveshrooms:setting-glow-flowering-value",
+        "weight": 5.03,
+        "comment": "Block glow brightness for the flowering (Caveshroom Saddle) growth stage (vanilla torch is 14). Requires a server restart - baked into the shipped blocktype JSON once at mod load.",
+        "default": 7,
+        "range": { "min": 0, "max": 22, "step": 1 }
+      },
+      "GLOW_RIPE_SATURATION": {
+        "name": "glow-ripe-saturation",
+        "ingui": "caveshrooms:setting-glow-ripe-saturation",
+        "weight": 5.04,
+        "comment": "Block glow saturation for the ripe (Caveshroom) growth stage. Real usable range is 0-7. Requires a server restart - baked into the shipped blocktype JSON once at mod load.",
+        "default": 7,
+        "range": { "min": 0, "max": 7, "step": 1 }
+      },
+      "GLOW_RIPE_VALUE": {
+        "name": "glow-ripe-value",
+        "ingui": "caveshrooms:setting-glow-ripe-value",
+        "weight": 5.05,
+        "comment": "Block glow brightness for the ripe (Caveshroom) growth stage (vanilla torch is 14). Requires a server restart - baked into the shipped blocktype JSON once at mod load.",
+        "default": 12,
+        "range": { "min": 0, "max": 22, "step": 1 }
+      }
+    }
+  }
+}
