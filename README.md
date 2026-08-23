@@ -35,3 +35,24 @@ sensible starting point rather than reinventing each one from scratch:
   shipped/left checklist; anything longer — debugging sagas, dead ends,
   full design-decision reasoning — goes in a gitignored `NOTES.local.md`
   instead of bloating the two files someone actually reads day to day.
+
+## Contributing
+
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```text
+<type>(<scope>): <summary>
+```
+
+- **type**: `feat`, `fix`, `refactor`, `docs`, `chore`, `test`
+- **scope**: the mod folder, lowercased (`caveshrooms`, `theunknowing`), or
+  omitted for repo-wide changes (tooling, this README)
+- **summary**: imperative mood, no trailing period
+
+Examples:
+
+```text
+feat(caveshrooms): add temporal milestone particle burst
+fix(theunknowing): correct claim radius check at chunk borders
+chore: update .gitignore for build output
+```
