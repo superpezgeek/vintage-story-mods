@@ -8,6 +8,7 @@ A collection of [Vintage Story](https://www.vintagestory.at/) mods, developed an
 | --- | --- | --- |
 | [Caveshrooms](caveshrooms/) | A mushroom that fruits from patches of temporally unstable substrate deep in caves. Grows on its own over time, glows, and eating it drains your temporal stability while making you glow — cumulatively. | Release candidate, in multiplayer testing |
 | [The Unknowing](theunknowing/) | Admin-summoned storm of forgetting that consumes an abandoned land claim, then regenerates the land beneath it. | Early scaffold — claim targeting only, no storm mechanics yet |
+| [Banhammer](banhammer/) | Admin-only creative weapon with three modes (smite/kick/ban) that lands a moderation action on the struck player instead of damage. | Design only — see `banhammer/README.md` and `ROADMAP.md`, nothing built yet |
 
 ## Patterns worth reusing for the next one
 
